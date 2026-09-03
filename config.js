@@ -4,4 +4,4 @@
    空のままでもアプリは動く（回答が記録されないだけ）。
    ============================================================ */
 
-var STUDYLIKE_LOG_URL = "";
+var STUDYLIKE_LOG_URL = "https://script.google.com/macros/s/AKfycbzW3NtdEfONTu2-QlQKxqLlyZEUHZP1Jl_q3va2R1_QtwZRW1s8YFDUe53_QMUD4kFvwg/exec";
