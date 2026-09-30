@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>貼り付けツール | Studylike塾</title>
+<style>
+  :root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: #f5f6f8;
+    color: #1c2430;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    padding: 24px 16px 48px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 20px; margin: 0 0 4px; color: #16325c; }
+  .sub { color: #5b6675; font-size: 13px; margin: 0 0 24px; line-height: 1.6; }
+  .card {
+    background: #fff;
+    border: 1px solid #e1e5eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; color: #33404f; margin-bottom: 6px; }
+  select, textarea, input[type="password"] {
+    width: 100%;
+    font-size: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+    border: 1px solid #cdd4dc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: #fff;
+    color: #1c2430;
+  }
+  textarea {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.6;
+    white-space: pre;
+  }
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: #5b6675; }
+  .checkbox-row input { width: 18px; height: 18px; }
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    background: #16325c;
+    color: #fff;
+    cursor: pointer;
+  }
+  button:active { background: #0f2440; }
+  .hint { font-size: 12px; color: #8792a0; margin-top: 6px; line-height: 1.6; }
+  .preview {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #5b6675;
+    background: #f5f6f8;
+    border-radius: 8px;
+    padding: 10px;
+    overflow-x: auto;
+  }
+  .preview table { border-collapse: collapse; width: 100%; }
+  .preview td { border: 1px solid #dde2e8; padding: 4px 6px; white-space: nowrap; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>貼り付けツール</h1>
+  <p class="sub">AIから届いた「転記用ブロック」を、スプレッドシートを開かずにそのまま送信できます。メールに書かれたタブ名を下で選び、ブロックを貼り付けて送信してください。</p>
+
+  <div class="card">
+    <div class="field">
+      <label for="tab">転記先のタブ</label>
+      <select id="tab"></select>
+    </div>
+
+    <div class="field">
+      <label for="block">転記用ブロック(メールからそのままコピー&ペースト)</label>
+      <textarea id="block" placeholder="ここに貼り付けてください"></textarea>
+      <div class="hint">タブ区切りのまま、改行や余計な文字を足さずに貼り付けてください。</div>
+      <div class="preview" id="preview" hidden></div>
+    </div>
+
+    <div class="field">
+      <label for="secret">合言葉(secret)</label>
+      <input type="password" id="secret" autocomplete="off">
+      <div class="checkbox-row">
+        <input type="checkbox" id="remember">
+        <label for="remember" style="margin:0;font-weight:400;">この端末に保存する(次回から入力不要)</label>
+      </div>
+    </div>
+  </div>
+
+  <form id="form" method="POST" action="https://script.google.com/macros/s/AKfycbz2WDN44PWPYso81VHqbsFR4Gv0URn8Ml7oKjYscEDcQo4WiOQ0WenfaIU4bgW6F3FQaA/exec" target="_blank">
+    <input type="hidden" name="payload" id="payload">
+    <button type="submit" id="submitBtn">送信する</button>
+  </form>
+  <div class="hint" style="margin-top:12px;text-align:center;">送信すると新しいタブが開き、結果(保存しました/失敗しました)が表示されます。</div>
+</div>
+
+<script>
+  var ALLOWED_TABS = [
+    "分析の答え合わせ",
+    "添削ノート(台本)",
+    "面談ログ",
+    "キーワード管理表",
+    "競合ネタ表",
+    "コンテンツカレンダー",
+    "会話ログ(営業)"
+  ];
+
+  var tabSelect = document.getElementById('tab');
+  ALLOWED_TABS.forEach(function (name) {
+    var opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    tabSelect.appendChild(opt);
+  });
+
+  var secretInput = document.getElementById('secret');
+  var rememberBox = document.getElementById('remember');
+  try {
+    var saved = localStorage.getItem('sl_paste_secret');
+    if (saved) {
+      secretInput.value = saved;
+      rememberBox.checked = true;
+    }
+  } catch (e) {}
+
+  var blockInput = document.getElementById('block');
+  var preview = document.getElementById('preview');
+  function renderPreview() {
+    var raw = blockInput.value;
+    if (!raw.trim()) { preview.hidden = true; preview.innerHTML = ''; return; }
+    var cells = raw.split('\t').map(function (c) { return c.trim(); });
+    var html = '<table><tr>' + cells.map(function (c) {
+      return '<td>' + (c === '' ? '<i>(空)</i>' : escapeHtml(c)) + '</td>';
+    }).join('') + '</tr></table>';
+    preview.innerHTML = html;
+    preview.hidden = false;
+  }
+  function escapeHtml(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  blockInput.addEventListener('input', renderPreview);
+
+  document.getElementById('form').addEventListener('submit', function (ev) {
+    var raw = blockInput.value;
+    var secret = secretInput.value;
+    if (!raw.trim()) {
+      ev.preventDefault();
+      alert('ブロックが空です。メールの転記用ブロックを貼り付けてください。');
+      return;
+    }
+    if (!secret) {
+      ev.preventDefault();
+      alert('合言葉(secret)を入力してください。');
+      return;
+    }
+    try {
+      if (rememberBox.checked) {
+        localStorage.setItem('sl_paste_secret', secret);
+      } else {
+        localStorage.removeItem('sl_paste_secret');
+      }
+    } catch (e) {}
+
+    var row = raw.split('\t').map(function (c) { return c.trim(); });
+    var payload = {
+      secret: secret,
+      tab: tabSelect.value,
+      action: 'append',
+      row: row
+    };
+    document.getElementById('payload').value = JSON.stringify(payload);
+    // ここでpreventDefaultしない: そのままフォームがtarget=_blankで送信される
+  });
+</script>
+</body>
+</html>
