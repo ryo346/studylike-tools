@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>共通テスト逆算プランナー | のこりび</title>
+<style>
+  :root{
+    --navy:#1B3A6B;
+    --navy-dark:#122747;
+    --accent:#E8720C;
+    --ink:#26324A;
+    --sub:#5B6472;
+    --line:#E3E6EB;
+    --bg:#F7F8FA;
+    --card:#FFFFFF;
+    --chip-bg:#EEF2F7;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    font-size:15px;
+    line-height:1.75;
+    padding-top:env(safe-area-inset-top,0px);
+    padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px);
+  }
+  img{max-width:100%;}
+  [hidden]{display:none!important;}
+
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:28px 20px 0;
+  }
+
+  header.hero{
+    text-align:center;
+    margin-bottom:28px;
+  }
+  .eyebrow{
+    display:inline-block;
+    font-size:12px;
+    letter-spacing:.06em;
+    color:var(--navy);
+    background:var(--chip-bg);
+    padding:5px 12px;
+    border-radius:999px;
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  h1{
+    font-size:21px;
+    line-height:1.5;
+    margin:0 0 10px;
+    color:var(--navy-dark);
+    font-weight:700;
+  }
+  .hero p{
+    color:var(--sub);
+    font-size:14px;
+    margin:0;
+  }
+
+  .countdown-card{
+    background:var(--navy-dark);
+    color:#fff;
+    border-radius:18px;
+    padding:24px 20px;
+    text-align:center;
+    margin:22px 0 30px;
+  }
+  .countdown-label{
+    font-size:13px;
+    opacity:.85;
+    margin-bottom:6px;
+  }
+  .countdown-num{
+    font-size:46px;
+    font-weight:800;
+    line-height:1.1;
+    letter-spacing:-0.02em;
+  }
+  .countdown-num span{
+    font-size:18px;
+    font-weight:600;
+    margin-left:4px;
+  }
+  .countdown-date{
+    font-size:12px;
+    opacity:.75;
+    margin-top:8px;
+  }
+
+  section.step{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:18px;
+  }
+  .step-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:14px;
+  }
+  .step-num{
+    flex:0 0 auto;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    background:var(--navy);
+    color:#fff;
+    font-size:13px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .step-title{
+    font-size:15px;
+    font-weight:700;
+    color:var(--navy-dark);
+  }
+  .step-sub{
+    font-size:13px;
+    color:var(--sub);
+    margin:-6px 0 14px 36px;
+  }
+
+  .choice-grid{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .choice-btn{
+    width:100%;
+    min-height:52px;
+    text-align:left;
+    background:var(--chip-bg);
+    border:2px solid transparent;
+    border-radius:12px;
+    padding:12px 16px;
+    font-size:14.5px;
+    font-family:inherit;
+    color:var(--ink);
+    cursor:pointer;
+    line-height:1.5;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .choice-btn:active{
+    transform:scale(0.995);
+  }
+  .choice-btn .main{
+    font-weight:700;
+    display:block;
+  }
+  .choice-btn .sub{
+    display:block;
+    font-size:12.5px;
+    color:var(--sub);
+    margin-top:2px;
+    font-weight:400;
+  }
+  .choice-btn.selected{
+    border-color:var(--navy);
+    background:#E7EDF6;
+  }
+  .choice-btn.selected .main{ color:var(--navy-dark); }
+
+  .choice-row{
+    display:flex;
+    gap:10px;
+  }
+  .choice-row .choice-btn{
+    flex:1;
+    text-align:center;
+  }
+
+  .cta-wrap{
+    margin:24px 0;
+  }
+  button.primary-btn{
+    width:100%;
+    min-height:52px;
+    border:none;
+    border-radius:12px;
+    background:var(--navy);
+    color:#fff;
+    font-size:15.5px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    transition:background .15s ease, opacity .15s ease;
+  }
+  button.primary-btn:disabled{
+    background:#B7C0CC;
+    cursor:not-allowed;
+  }
+  button.primary-btn:not(:disabled):active{
+    background:var(--navy-dark);
+  }
+  .helper-text{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--sub);
+    margin-top:8px;
+  }
+
+  #result{
+    margin-top:4px;
+  }
+  .result-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:22px 20px;
+    margin-bottom:16px;
+  }
+  .result-card h2{
+    font-size:13px;
+    color:var(--navy);
+    letter-spacing:.04em;
+    margin:0 0 12px;
+    font-weight:700;
+  }
+  .book-name{
+    font-size:18px;
+    font-weight:800;
+    color:var(--navy-dark);
+    margin-bottom:6px;
+    line-height:1.5;
+  }
+  .book-meta{
+    font-size:12.5px;
+    color:var(--sub);
+    margin-bottom:14px;
+    line-height:1.7;
+  }
+  .book-note{
+    font-size:14px;
+    color:var(--ink);
+    border-top:1px dashed var(--line);
+    padding-top:12px;
+    margin-bottom:14px;
+  }
+  .pace-row{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    background:#FBF3EA;
+    border-radius:12px;
+    padding:14px 16px;
+  }
+  .pace-num{
+    font-size:30px;
+    font-weight:800;
+    color:var(--accent);
+    line-height:1;
+  }
+  .pace-label{
+    font-size:13px;
+    color:var(--ink);
+    line-height:1.6;
+  }
+  .pace-formula{
+    font-size:11.5px;
+    color:var(--sub);
+    margin-top:10px;
+  }
+  .source-note{
+    font-size:11px;
+    color:var(--sub);
+    margin-top:10px;
+  }
+
+  .bridge-card{
+    background:var(--navy-dark);
+    color:#fff;
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:10px;
+  }
+  .bridge-card h2{
+    font-size:14px;
+    margin:0 0 10px;
+    font-weight:700;
+  }
+  .bridge-card p{
+    font-size:13.5px;
+    opacity:.92;
+    margin:0 0 14px;
+  }
+  .bridge-steps{
+    background:rgba(255,255,255,.08);
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13px;
+    line-height:1.8;
+  }
+
+  footer{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--sub);
+    margin:26px 0 10px;
+  }
+
+  @media (max-width:360px){
+    .countdown-num{font-size:40px;}
+    h1{font-size:19px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">STUDYLIKE塾 LINE限定特典</span>
+    <h1>共通テストまであと何日?<br>3ステップでわかる逆算プランナー</h1>
+    <p>残り日数から、今日やる1冊と1日の分数まで出します。</p>
+  </header>
+
+  <div class="countdown-card">
+    <div class="countdown-label">2027年共通テスト(1/16)まで</div>
+    <div class="countdown-num" id="countdownNum">―<span>日</span></div>
+    <div class="countdown-date">今日の日付をもとに自動計算しています</div>
+  </div>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">1</span>
+      <span class="step-title">今の状態に近いものを選ぶ</span>
+    </div>
+    <div class="step-sub">正直でOK。今の自分に合うレベルを選んでね</div>
+    <div class="choice-grid" id="bandChoices">
+      <button type="button" class="choice-btn" data-band="base">
+        <span class="main">基礎からやり直したい</span>
+        <span class="sub">苦手科目があって、まず土台を固めたい</span>
+      </button>
+      <button type="button" class="choice-btn" data-band="standard">
+        <span class="main">共通テスト〜標準を安定させたい</span>
+        <span class="sub">国公立の標準ライン(偏差値50前後)を固めたい</span>
+      </button>
+      <button type="button" class="choice-btn" data-band="advanced">
+        <span class="main">難関〜最難関を本気で狙いたい</span>
+        <span class="sub">旧帝大・早慶・京大レベルまで伸ばしたい</span>
+      </button>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="step-head">
+      <span class="step-num">2</span>
+      <span class="step-title">今いちばん不安な科目は?</span>
+    </div>
+    <div class="step-sub">今夜手をつける1科目だけ選べばOK</div>
+    <div class="choice-row" id="subjectChoices">
+      <button type="button" class="choice-btn" data-subject="en">
+        <span class="main">英語</span>
+      </button>
+      <button type="button" class="choice-btn" data-subject="kokugo">
+        <span class="main">現代文</span>
+      </button>
+    </div>
+  </section>
+
+  <div class="cta-wrap">
+    <button type="button" class="primary-btn" id="showResultBtn" disabled>結果を見る</button>
+    <div class="helper-text">2つとも選ぶとボタンが押せるようになります</div>
+  </div>
+
+  <div id="result" hidden>
+    <div class="result-card">
+      <h2>今日から進める1冊</h2>
+      <div class="book-name" id="resBookName"></div>
+      <div class="book-meta" id="resBookMeta"></div>
+      <div class="book-note" id="resBookNote"></div>
+
+      <div class="pace-row">
+        <div class="pace-num" id="resPaceNum"></div>
+        <div class="pace-label">分/日のペースで、推奨期間内に1周できる計算</div>
+      </div>
+      <div class="pace-formula" id="resFormula"></div>
+      <div class="source-note">※参考書データは「参考書マスターBook(2026年7月版)」の記載数値のみを使用しています。</div>
+    </div>
+
+    <div class="bridge-card">
+      <h2>この配分、自分専用に直してほしい人へ</h2>
+      <p>今の偏差値・すでに持ってる参考書・部活の引退時期によって、ベストな配分は人それぞれ変わります。1人で抱えずに、現役京大生に今の状況を見せてみて。</p>
+      <div class="bridge-steps">
+        このままLINEのトーク画面に戻って<br>
+        「できた」とひとこと送ってね。<br>
+        今の学年・志望校・今日選んだ科目を教えてくれたら、あなた専用の配分に組み替えて返信するよ。
+      </div>
+    </div>
+  </div>
+
+  <footer>STUDYLIKE塾 &mdash; 偏差値50から、国公立へ。</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATA = {
+    base: {
+      en: {
+        name: "システム英単語 Basic",
+        publisher: "駿台文庫", level: "難易度2(基礎)", hours: 20, months: 1.5,
+        note: "英語が苦手な人の基礎固め用。ミニマルフレーズ(短いフレーズごと覚える方式)が使いやすく、基礎単語を効率よく習得できる1冊。"
+      },
+      kokugo: {
+        name: "船口のゼロから読み解く最強の現代文",
+        publisher: "Gakken(学研)", level: "難易度2(基礎)", hours: 15, months: 1,
+        note: "現代文が苦手な人の1冊目として第一推奨。図解が多く、論理展開の視覚化を学べる。成績が上下に振れる人が安定し始めるきっかけになる1冊。"
+      }
+    },
+    standard: {
+      en: {
+        name: "英単語ターゲット1900",
+        publisher: "旺文社", level: "難易度3(標準)", hours: 30, months: 2,
+        note: "ほぼすべての受験生に向く、大学受験の王道の1冊目。一語一義のシンプルな構成で、年間を通じて使い続けられる。"
+      },
+      kokugo: {
+        name: "入試現代文へのアクセス 基本編",
+        publisher: "河合出版", level: "難易度2(基礎〜標準)", hours: 20, months: 2,
+        note: "基礎的な設問への取り組み方を学びたい人向け。河合塾シリーズらしい丁寧な解説が売りの演習書。"
+      }
+    },
+    advanced: {
+      en: {
+        name: "鉄壁(鉄緑会東大英単語熟語)",
+        publisher: "KADOKAWA", level: "難易度4(発展)", hours: 60, months: 6,
+        note: "難関大志望者向け。標準単語帳を終えた人の2冊目として、関連語のネットワークやイメージ図を用いて覚える構成。"
+      },
+      kokugo: {
+        name: "現代文と格闘する",
+        publisher: "河合出版", level: "難易度5(最難関)", hours: 50, months: 3,
+        note: "早慶上智などの最難関志望者向け。文中の「要約」を通じて論理を掴む、現代文参考書の最高峰と言われる1冊。"
+      }
+    }
+  };
+
+  var state = { band: null, subject: null };
+
+  function updateCountdown(){
+    try {
+      var target = new Date("2027-01-16T00:00:00+09:00");
+      var now = new Date();
+      var diffMs = target.getTime() - now.getTime();
+      var days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      var el = document.getElementById("countdownNum");
+      if (days > 0) {
+        el.innerHTML = days + "<span>日</span>";
+      } else if (days === 0) {
+        el.innerHTML = "本日<span>が本番</span>";
+      } else {
+        el.innerHTML = "受験<span>シーズン中</span>";
+      }
+    } catch(e) {
+      var el2 = document.getElementById("countdownNum");
+      if (el2) el2.textContent = "計算中";
+    }
+  }
+
+  function selectButton(container, btn, dataAttr, value){
+    var buttons = container.querySelectorAll(".choice-btn");
+    for (var i=0;i<buttons.length;i++){ buttons[i].classList.remove("selected"); }
+    btn.classList.add("selected");
+    state[dataAttr] = value;
+    refreshButtonState();
+  }
+
+  function refreshButtonState(){
+    var btn = document.getElementById("showResultBtn");
+    var helper = document.querySelector(".helper-text");
+    if (state.band && state.subject) {
+      btn.disabled = false;
+      helper.textContent = "準備OK!「結果を見る」を押してね";
+    } else {
+      btn.disabled = true;
+      helper.textContent = "2つとも選ぶとボタンが押せるようになります";
+    }
+  }
+
+  function showResult(){
+    if (!state.band || !state.subject) return;
+    var item = DATA[state.band][state.subject];
+    if (!item) return;
+
+    document.getElementById("resBookName").textContent = item.name;
+    document.getElementById("resBookMeta").textContent =
+      "出版社:" + item.publisher + " / " + item.level + " / 1周の学習時間:" + item.hours + "h / 推奨期間:" + formatMonths(item.months);
+    document.getElementById("resBookNote").textContent = item.note;
+
+    var totalMinutes = item.hours * 60;
+    var totalDays = Math.round(item.months * 30);
+    var perDay = Math.max(1, Math.round(totalMinutes / totalDays));
+    document.getElementById("resPaceNum").textContent = perDay;
+    document.getElementById("resFormula").textContent =
+      "計算式: " + item.hours + "h × 60分 ÷ " + formatMonths(item.months) + "(約" + totalDays + "日) ≒ 1日" + perDay + "分";
+
+    var resultEl = document.getElementById("result");
+    resultEl.hidden = false;
+    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function formatMonths(months){
+    if (months === 6) return "半年";
+    if (Number.isInteger(months)) return months + "ヶ月";
+    return months + "ヶ月";
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    updateCountdown();
+
+    var bandContainer = document.getElementById("bandChoices");
+    var bandButtons = bandContainer.querySelectorAll(".choice-btn");
+    for (var i=0;i<bandButtons.length;i++){
+      bandButtons[i].addEventListener("click", function(){
+        selectButton(bandContainer, this, "band", this.getAttribute("data-band"));
+      });
+    }
+
+    var subjectContainer = document.getElementById("subjectChoices");
+    var subjectButtons = subjectContainer.querySelectorAll(".choice-btn");
+    for (var j=0;j<subjectButtons.length;j++){
+      subjectButtons[j].addEventListener("click", function(){
+        selectButton(subjectContainer, this, "subject", this.getAttribute("data-subject"));
+      });
+    }
+
+    document.getElementById("showResultBtn").addEventListener("click", showResult);
+  });
+})();
+</script>
+</body>
+</html>
