@@ -17,7 +17,7 @@ jobs:
       - name: Find changed row.json files and send them
         env:
           WRITER_SECRET: ${{ secrets.WRITER_SECRET }}
-          ENDPOINT: https://script.google.com/macros/s/AKfycbz2WDN44PWPYso81VHqbsFR4Gv0URn8Ml7oKjYscEDcQo4WiOQ0WenfaIU4bgW6F3FQaA/exec
+          ENDPOINT: https://script.google.com/macros/s/AKfycbyJdMWpD2DXmWMvhbDLzMaBWisp1hMVc8hVB4k7WWcNlZwljbv9yRaAP2lbUr2CVErnpQ/exec
         run: |
           set -e
           # 直前のコミットで追加/変更された row.json だけを対象にする
