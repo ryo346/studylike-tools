@@ -34,6 +34,7 @@ jobs:
             echo "送信中: $f"
             PAYLOAD=$(jq --arg secret "$WRITER_SECRET" '. + {secret: $secret, action: "append"}' "$f")
             RESPONSE=$(curl -sS -L -w "\n[HTTP_STATUS:%{http_code}]" -X POST \
+              -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36" \
               -H "Content-Type: text/plain;charset=utf-8" \
               -d "$PAYLOAD" \
               "$ENDPOINT")
