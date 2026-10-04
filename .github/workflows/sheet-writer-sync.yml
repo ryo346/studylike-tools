@@ -1,0 +1,41 @@
+name: Sync gift rows to keyword sheet
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "gifts/**/row.json"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Find changed row.json files and send them
+        env:
+          WRITER_SECRET: ${{ secrets.WRITER_SECRET }}
+          ENDPOINT: https://script.google.com/macros/s/AKfycbz2WDN44PWPYso81VHqbsFR4Gv0URn8Ml7oKjYscEDcQo4WiOQ0WenfaIU4bgW6F3FQaA/exec
+        run: |
+          set -e
+          # 直前のコミットで追加/変更された row.json だけを対象にする
+          FILES=$(git diff --name-only HEAD~1 HEAD -- 'gifts/**/row.json' || true)
+          if [ -z "$FILES" ]; then
+            echo "対象のrow.jsonが見つかりませんでした"
+            exit 0
+          fi
+          for f in $FILES; do
+            if [ ! -f "$f" ]; then
+              echo "skip (deleted): $f"
+              continue
+            fi
+            echo "送信中: $f"
+            PAYLOAD=$(jq --arg secret "$WRITER_SECRET" '. + {secret: $secret, action: "append"}' "$f")
+            curl -sS -X POST \
+              -H "Content-Type: text/plain;charset=utf-8" \
+              -d "$PAYLOAD" \
+              "$ENDPOINT"
+            echo ""
+          done
