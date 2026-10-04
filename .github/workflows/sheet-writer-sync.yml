@@ -33,9 +33,13 @@ jobs:
             fi
             echo "送信中: $f"
             PAYLOAD=$(jq --arg secret "$WRITER_SECRET" '. + {secret: $secret, action: "append"}' "$f")
-            curl -sS -X POST \
+            RESPONSE=$(curl -sS -L --post302 --post303 -w "\n[HTTP_STATUS:%{http_code}]" -X POST \
               -H "Content-Type: text/plain;charset=utf-8" \
               -d "$PAYLOAD" \
-              "$ENDPOINT"
-            echo ""
+              "$ENDPOINT")
+            echo "$RESPONSE"
+            if ! echo "$RESPONSE" | grep -q '"ok":true'; then
+              echo "::error::$f の書き込みに失敗した可能性があります"
+              exit 1
+            fi
           done
