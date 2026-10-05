@@ -49,6 +49,9 @@
   }
   .field { margin-bottom: 16px; }
   .field:last-child { margin-bottom: 0; }
+  .mode-row { display: flex; gap: 16px; margin-bottom: 16px; font-size: 14px; }
+  .mode-row label { display: flex; align-items: center; gap: 6px; font-weight: 400; margin: 0; color: #1c2430; }
+  .mode-row input { width: 16px; height: 16px; }
   .checkbox-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 13px; color: #5b6675; }
   .checkbox-row input { width: 18px; height: 18px; }
   button {
@@ -63,6 +66,7 @@
     cursor: pointer;
   }
   button:active { background: #0f2440; }
+  button:disabled { background: #9aa6b3; cursor: default; }
   .hint { font-size: 12px; color: #8792a0; margin-top: 6px; line-height: 1.6; }
   .preview {
     margin-top: 10px;
@@ -75,15 +79,23 @@
   }
   .preview table { border-collapse: collapse; width: 100%; }
   .preview td { border: 1px solid #dde2e8; padding: 4px 6px; white-space: nowrap; }
+  .result { margin-top: 12px; font-size: 13px; line-height: 1.7; white-space: pre-wrap; }
+  .result .ok { color: #1a7f37; }
+  .result .err { color: #cf222e; }
   [hidden] { display: none !important; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>貼り付けツール</h1>
-  <p class="sub">AIから届いた「転記用ブロック」を、スプレッドシートを開かずにそのまま送信できます。メールに書かれたタブ名を下で選び、ブロックを貼り付けて送信してください。</p>
+  <p class="sub">AIから届いた「転記用ブロック」を、スプレッドシートを開かずにそのまま送信できます。</p>
 
-  <div class="card">
+  <div class="mode-row">
+    <label><input type="radio" name="mode" value="append" checked> 追記(新しい行を足す)</label>
+    <label><input type="radio" name="mode" value="update"> 更新(勝因/敗因仮説を書き換える)</label>
+  </div>
+
+  <div class="card" id="appendCard">
     <div class="field">
       <label for="tab">転記先のタブ</label>
       <select id="tab"></select>
@@ -95,7 +107,17 @@
       <div class="hint">タブ区切りのまま、改行や余計な文字を足さずに貼り付けてください。</div>
       <div class="preview" id="preview" hidden></div>
     </div>
+  </div>
 
+  <div class="card" id="updateCard" hidden>
+    <div class="field">
+      <label for="hypoBlock">勝因/敗因仮説の貼り付け用ブロック(メールからそのままコピー&ペースト)</label>
+      <textarea id="hypoBlock" placeholder="投稿ID&#9;仮説テキスト の形式で1行1件(メールのブロックをそのまま貼ればOK)"></textarea>
+      <div class="hint">「勝ち台本ライブラリ」の投稿IDに一致する行のH列(勝因/敗因の仮説)だけを書き換えます。他の列には触れません。空欄だった行以外に貼っても、既存の内容が上書きされるのでメールのブロックのまま使ってください。</div>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="field">
       <label for="secret">合言葉(secret)</label>
       <input type="password" id="secret" autocomplete="off">
@@ -106,14 +128,14 @@
     </div>
   </div>
 
-  <form id="form" method="POST" action="https://script.google.com/macros/s/AKfycbz2WDN44PWPYso81VHqbsFR4Gv0URn8Ml7oKjYscEDcQo4WiOQ0WenfaIU4bgW6F3FQaA/exec" target="_blank">
-    <input type="hidden" name="payload" id="payload">
-    <button type="submit" id="submitBtn">送信する</button>
-  </form>
-  <div class="hint" style="margin-top:12px;text-align:center;">送信すると新しいタブが開き、結果(保存しました/失敗しました)が表示されます。</div>
+  <button type="button" id="submitBtn">送信する</button>
+  <div class="hint" id="appendHint" style="margin-top:12px;text-align:center;">送信すると新しいタブが開き、結果(保存しました/失敗しました)が表示されます。</div>
+  <div class="result" id="result" hidden></div>
 </div>
 
 <script>
+  var ENDPOINT = "https://script.google.com/macros/s/AKfycbyJdMWpD2DXmWMvhbDLzMaBWisp1hMVc8hVB4k7WWcNlZwljbv9yRaAP2lbUr2CVErnpQ/exec";
+
   var ALLOWED_TABS = [
     "分析の答え合わせ",
     "添削ノート(台本)",
@@ -142,6 +164,25 @@
     }
   } catch (e) {}
 
+  var appendCard = document.getElementById('appendCard');
+  var updateCard = document.getElementById('updateCard');
+  var appendHint = document.getElementById('appendHint');
+  var modeRadios = document.querySelectorAll('input[name="mode"]');
+  function currentMode() {
+    for (var i = 0; i < modeRadios.length; i++) {
+      if (modeRadios[i].checked) return modeRadios[i].value;
+    }
+    return 'append';
+  }
+  function applyModeVisibility() {
+    var isUpdate = currentMode() === 'update';
+    appendCard.hidden = isUpdate;
+    updateCard.hidden = !isUpdate;
+    appendHint.hidden = isUpdate;
+  }
+  modeRadios.forEach(function (r) { r.addEventListener('change', applyModeVisibility); });
+  applyModeVisibility();
+
   var blockInput = document.getElementById('block');
   var preview = document.getElementById('preview');
   function renderPreview() {
@@ -159,19 +200,10 @@
   }
   blockInput.addEventListener('input', renderPreview);
 
-  document.getElementById('form').addEventListener('submit', function (ev) {
-    var raw = blockInput.value;
-    var secret = secretInput.value;
-    if (!raw.trim()) {
-      ev.preventDefault();
-      alert('ブロックが空です。メールの転記用ブロックを貼り付けてください。');
-      return;
-    }
-    if (!secret) {
-      ev.preventDefault();
-      alert('合言葉(secret)を入力してください。');
-      return;
-    }
+  var resultBox = document.getElementById('result');
+  var submitBtn = document.getElementById('submitBtn');
+
+  function saveSecretIfNeeded(secret) {
     try {
       if (rememberBox.checked) {
         localStorage.setItem('sl_paste_secret', secret);
@@ -179,16 +211,93 @@
         localStorage.removeItem('sl_paste_secret');
       }
     } catch (e) {}
+  }
 
+  async function submitAppend(secret) {
+    var raw = blockInput.value;
+    if (!raw.trim()) { alert('ブロックが空です。メールの転記用ブロックを貼り付けてください。'); return; }
     var row = raw.split('\t').map(function (c) { return c.trim(); });
-    var payload = {
-      secret: secret,
-      tab: tabSelect.value,
-      action: 'append',
-      row: row
-    };
-    document.getElementById('payload').value = JSON.stringify(payload);
-    // ここでpreventDefaultしない: そのままフォームがtarget=_blankで送信される
+    var payload = { secret: secret, tab: tabSelect.value, action: 'append', row: row };
+    var win = window.open('', '_blank');
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = ENDPOINT;
+    form.target = win ? win.name || '_blank' : '_self';
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'payload';
+    input.value = JSON.stringify(payload);
+    form.appendChild(input);
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  }
+
+  async function submitUpdate(secret) {
+    var raw = document.getElementById('hypoBlock').value;
+    if (!raw.trim()) { alert('仮説の貼り付け用ブロックが空です。'); return; }
+    var lines = raw.split('\n').map(function (l) { return l.trim(); }).filter(function (l) { return l; });
+    var entries = lines.map(function (line) {
+      var parts = line.split('\t');
+      return { postId: (parts[0] || '').trim(), text: (parts.slice(1).join('\t') || '').trim() };
+    }).filter(function (e) { return e.postId && e.text; });
+
+    if (entries.length === 0) {
+      alert('「投稿ID[タブ]仮説テキスト」の形式の行が見つかりませんでした。');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = '送信中…(' + entries.length + '件)';
+    resultBox.hidden = false;
+    resultBox.innerHTML = '';
+
+    var okCount = 0, errCount = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var e = entries[i];
+      var body = {
+        secret: secret,
+        tab: '勝ち台本ライブラリ',
+        action: 'update',
+        matchColumn: 9,
+        matchValue: e.postId,
+        updates: { "8": e.text }
+      };
+      var line;
+      try {
+        var res = await fetch(ENDPOINT, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body)
+        });
+        var json = await res.json();
+        if (json.ok) {
+          okCount++;
+          line = '<span class="ok">✓ ' + escapeHtml(e.postId) + ' を更新しました(' + json.row + '行目)</span>';
+        } else {
+          errCount++;
+          line = '<span class="err">✗ ' + escapeHtml(e.postId) + ': ' + escapeHtml(json.error || '不明なエラー') + '</span>';
+        }
+      } catch (err) {
+        errCount++;
+        line = '<span class="err">✗ ' + escapeHtml(e.postId) + ': 通信エラー(' + escapeHtml(String(err)) + ')</span>';
+      }
+      resultBox.innerHTML += line + '\n';
+    }
+    resultBox.innerHTML += '\n完了: 成功' + okCount + '件 / 失敗' + errCount + '件';
+    submitBtn.disabled = false;
+    submitBtn.textContent = '送信する';
+  }
+
+  submitBtn.addEventListener('click', function () {
+    var secret = secretInput.value;
+    if (!secret) { alert('合言葉(secret)を入力してください。'); return; }
+    saveSecretIfNeeded(secret);
+    if (currentMode() === 'update') {
+      submitUpdate(secret);
+    } else {
+      submitAppend(secret);
+    }
   });
 </script>
 </body>
