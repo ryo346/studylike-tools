@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>中間テスト崩れタイプ診断</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#141d36;
+    --gray-bg:#f4f5f7;
+    --gray-line:#dfe2e8;
+    --gray-text:#5b6270;
+    --white:#ffffff;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--gray-bg);
+    color:var(--navy-deep);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 48px;
+  }
+  header.appbar{
+    text-align:center;
+    padding:14px 0 10px;
+  }
+  header.appbar .brand{
+    font-size:12px;
+    letter-spacing:.08em;
+    color:var(--gray-text);
+  }
+  header.appbar .title{
+    font-size:18px;
+    font-weight:700;
+    color:var(--navy);
+    margin-top:4px;
+  }
+  .progress{
+    height:4px;
+    background:var(--gray-line);
+    border-radius:4px;
+    overflow:hidden;
+    margin:10px 0 22px;
+  }
+  .progress-bar{
+    height:100%;
+    background:var(--navy);
+    width:0%;
+    transition:width .25s ease;
+  }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:14px;
+    padding:20px 18px;
+    margin-bottom:16px;
+  }
+  h1.q-title{
+    font-size:17px;
+    font-weight:700;
+    color:var(--navy-deep);
+    margin:0 0 6px;
+    line-height:1.6;
+  }
+  p.q-sub{
+    font-size:14px;
+    color:var(--gray-text);
+    margin:0 0 18px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  button.opt{
+    width:100%;
+    min-height:52px;
+    text-align:left;
+    padding:13px 16px;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--navy-deep);
+    background:var(--white);
+    border:1.5px solid var(--gray-line);
+    border-radius:10px;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.opt:active{
+    background:var(--gray-bg);
+    border-color:var(--navy);
+  }
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:4px;
+  }
+  button.link-btn{
+    background:none;
+    border:none;
+    color:var(--gray-text);
+    font-size:14px;
+    padding:10px 4px;
+    min-height:44px;
+    cursor:pointer;
+  }
+  .intro h1{
+    font-size:21px;
+    color:var(--navy-deep);
+    line-height:1.5;
+    margin:4px 0 14px;
+  }
+  .intro p{
+    font-size:14.5px;
+    color:var(--gray-text);
+    margin:0 0 14px;
+  }
+  .badge{
+    display:inline-block;
+    font-size:12px;
+    color:var(--navy);
+    background:#e8ecf5;
+    border-radius:20px;
+    padding:4px 12px;
+    margin-bottom:12px;
+  }
+  button.primary{
+    width:100%;
+    min-height:52px;
+    background:var(--navy);
+    color:var(--white);
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.primary:active{ background:var(--navy-deep); }
+  button.secondary{
+    width:100%;
+    min-height:52px;
+    background:var(--white);
+    color:var(--navy);
+    border:1.5px solid var(--navy);
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  .result-type{
+    font-size:13px;
+    color:var(--gray-text);
+    margin-bottom:4px;
+  }
+  .result-name{
+    font-size:21px;
+    font-weight:700;
+    color:var(--navy);
+    margin:0 0 12px;
+    line-height:1.5;
+  }
+  .result-desc{
+    font-size:14.5px;
+    color:var(--navy-deep);
+    margin-bottom:16px;
+  }
+  .section-label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+    border-left:4px solid var(--navy);
+    padding-left:8px;
+    margin:18px 0 10px;
+  }
+  .tonight-box{
+    background:var(--gray-bg);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:15px;
+    line-height:1.7;
+  }
+  ul.schedule{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  ul.schedule li{
+    display:flex;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--gray-line);
+    font-size:14.5px;
+  }
+  ul.schedule li:last-child{ border-bottom:none; }
+  .sched-date{
+    flex:0 0 70px;
+    color:var(--navy);
+    font-weight:700;
+    font-size:14px;
+  }
+  .sched-label{ color:var(--navy-deep); }
+  .cta-box{
+    margin-top:18px;
+    background:var(--navy);
+    color:var(--white);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .cta-box p{
+    font-size:14px;
+    line-height:1.7;
+    margin:0;
+  }
+  .small-note{
+    font-size:12px;
+    color:var(--gray-text);
+    text-align:center;
+    margin-top:18px;
+    line-height:1.7;
+  }
+  .prev-banner{
+    background:#e8ecf5;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    color:var(--navy-deep);
+    margin-bottom:16px;
+    line-height:1.7;
+  }
+  .prev-banner button{
+    margin-top:8px;
+  }
+  .copy-feedback{
+    font-size:12.5px;
+    color:var(--navy);
+    text-align:center;
+    margin-top:8px;
+    min-height:16px;
+  }
+  footer.footnote{
+    text-align:center;
+    font-size:11.5px;
+    color:#9aa0ab;
+    margin-top:28px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand">STUDYLIKE塾</div>
+    <div class="title">中間テスト崩れタイプ診断</div>
+  </header>
+
+  <div id="progressWrap" class="progress" style="display:none;">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 0: イントロ -->
+  <section class="screen active" id="screen-intro">
+    <div id="prevBannerWrap"></div>
+    <div class="card intro">
+      <span class="badge">4つの質問・約90秒</span>
+      <h1>中間テストで崩れた理由、タイプで分かります</h1>
+      <p>「計画」「復習」「部活」「範囲」のどこで崩れたのかを4つの質問でチェックして、<strong>今夜やること</strong>と<strong>次のテストまでの予定</strong>を出すよ。</p>
+      <p>結果はこの端末に保存されるから、あとで見返すこともできます。</p>
+      <button class="primary" id="startBtn">はじめる</button>
+    </div>
+  </section>
+
+  <!-- 1: Q1 -->
+  <section class="screen" id="screen-q1">
+    <div class="card">
+      <h1 class="q-title">Q1. 今回の中間テスト、手応えはどうだった?</h1>
+      <p class="q-sub">まだ結果が出ていなくてもOK。今の感覚で選んでね。</p>
+      <div class="options" id="opts-q1"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="intro">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 2: Q2 -->
+  <section class="screen" id="screen-q2">
+    <div class="card">
+      <h1 class="q-title">Q2. 今回、一番崩れたのはどれ?</h1>
+      <p class="q-sub">一番近いものを1つ選んでね。</p>
+      <div class="options" id="opts-q2"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="q1">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 3: Q3 -->
+  <section class="screen" id="screen-q3">
+    <div class="card">
+      <h1 class="q-title">Q3. その崩れ方、どのくらいの頻度だった?</h1>
+      <p class="q-sub">勉強時間が取れなかった・計画通りにいかなかった回数の感覚でOK。</p>
+      <div class="options" id="opts-q3"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="q2">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 4: Q4 -->
+  <section class="screen" id="screen-q4">
+    <div class="card">
+      <h1 class="q-title">Q4. 今の部活の状況は?</h1>
+      <p class="q-sub">「今夜やること」の量を、無理のない大きさに調整するために聞いています。</p>
+      <div class="options" id="opts-q4"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="q3">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 5: 結果 -->
+  <section class="screen" id="screen-result">
+    <div class="card">
+      <div class="result-type">診断結果</div>
+      <h2 class="result-name" id="resultName"></h2>
+      <p id="resultOpen" style="font-size:14.5px; color:#5b6270; margin:0 0 12px;"></p>
+      <p class="result-desc" id="resultDesc"></p>
+
+      <div class="section-label">① 今夜やる1つのこと</div>
+      <div class="tonight-box" id="resultTonight"></div>
+
+      <div class="section-label">② 次のテストまでの予定(日付つき)</div>
+      <ul class="schedule" id="resultSchedule"></ul>
+
+      <div class="cta-box">
+        <p>ここまで読んだら、一歩先へ。<br>今の学年・志望校・今回の崩れタイプを塾のLINEに送ってくれたら、あなた専用の立て直しプランを一緒に見ていくよ。「面談してみたい」でもOK。</p>
+      </div>
+
+      <button class="secondary" id="copyBtn">結果をコピーして保存する</button>
+      <div class="copy-feedback" id="copyFeedback"></div>
+      <button class="secondary" id="restartBtn">もう一度診断する</button>
+    </div>
+  </section>
+
+  <footer class="footnote">STUDYLIKE塾 / この診断は目安です。学校の提出物・課題を優先してください。</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- logic.js の内容(そのまま) ----
+  var CAUSE_INFO = {
+    plan: {
+      name: "計画崩壊タイプ",
+      desc: "計画は立てていたけれど、その通りに進まなかったタイプ。計画そのものの立て方よりも「崩れたときの立て直し方」が課題になっていることが多いよ。",
+      tonightHeavy: "今夜は机に向かう前に3分だけ。「明日の朝、最初にやる1科目」を1つだけ紙に書いて寝る。",
+      tonightLight: "今夜は30分だけでいい。今週の「できなかったこと」を3つだけ書き出して、優先順位をつける。",
+      day3: "崩れた原因を1つだけ書き出す(量が多すぎた/時間を見積もり間違えた、など)",
+      day7: "来週の予定を「1日2科目まで」で組み直してみる(詰め込みすぎが崩れの合図)",
+      day14: "2週間前の自分と比べて、計画通りに進んだ日が増えたか振り返る"
+    },
+    review: {
+      name: "復習漏れタイプ",
+      desc: "テスト前に新しいことをやるのに精いっぱいで、できなかった問題のやり直しまで手が回らなかったタイプ。点数が伸びない一番の原因は「復習の時間」そのものが足りないことが多いよ。",
+      tonightHeavy: "今夜は10分だけ。テストで間違えた問題を1問だけ選んで、解き直す。",
+      tonightLight: "今夜は30分。間違えた問題の中で「絶対に次も出そう」なものを3問選んで解き直す。",
+      day3: "間違えた問題を解き直して、まだ解けない問題だけに印をつける",
+      day7: "印をつけた問題だけをもう1回解き直す(2回目で解けるかを確認)",
+      day14: "印がついたまま残っている問題が0になっているか確認する"
+    },
+    club: {
+      name: "部活時間不足タイプ",
+      desc: "部活が理由で、そもそも勉強にあてられる時間が少なかったタイプ。これは気合いの問題じゃなくて、スキマ時間の使い方を変えると一気に楽になるよ。",
+      tonightHeavy: "今夜は5分だけ。お風呂上がりか寝る前に、今日習った内容を声に出して1回だけ説明してみる。",
+      tonightLight: "今夜は15分。部活がない日に「どの時間に何をやるか」を3つだけ決める。",
+      day3: "通学中・部活の移動中に見返せるメモ(単語・公式など)を1つ作る",
+      day7: "部活がある日とない日で、勉強時間がどれくらい違うか記録してみる",
+      day14: "部活がある日でも「これだけは必ずやる」が守れているか振り返る"
+    },
+    scope: {
+      name: "範囲把握不足タイプ",
+      desc: "範囲が広くて、どこから手をつければいいか分からなくなったタイプ。「全部やろう」とすると毎回同じように崩れるから、範囲を絞る練習が必要だよ。",
+      tonightHeavy: "今夜は5分。次の授業のノートを開いて、「出そうな単元」を1つだけ丸で囲む。",
+      tonightLight: "今夜は20分。今回のテスト範囲のうち「一番苦手だった単元」を1つだけ決めて、該当ページだけ見返す。",
+      day3: "次のテスト範囲を、科目ごとに1行でメモしておく(早めに全体量を知る)",
+      day7: "メモした範囲の中で「絶対に落とせない基本」だけを先に仕上げる",
+      day14: "範囲全体のうち、まだ手をつけていない部分がどれくらい残っているか確認する"
+    },
+    steady: {
+      name: "順調タイプ",
+      desc: "大きく崩れてはいないタイプ。ここからは「崩れないための仕組み」をキープしながら、少しずつ得点を伸ばすフェーズだよ。",
+      tonightHeavy: "今夜は10分。今のやり方の中で「これは続ける」と思うことを1つだけ紙に書く。",
+      tonightLight: "今夜は20分。次のテストに向けて、1科目だけ少し早めに手をつけてみる。",
+      day3: "今のやり方を続けながら、1科目だけ早めにスタートを切る",
+      day7: "早めに手をつけた科目の進み具合を確認する",
+      day14: "次のテストまでの残り時間と、今の進み具合を見比べてみる"
+    }
+  };
+
+  var OPEN_LINES = {
+    good: "まずは今回、手応えがあったみたいでよかった。その調子を次にもつなげる方法を見ていくよ。",
+    normal: "「普通」くらいの手応えだったんだね。ここから伸ばせる部分が、きっとまだあるよ。",
+    bad: "今回、思うようにいかなかったんだね。それはやり方の問題で、ちゃんと直せるところがあるから、一緒に見ていこう。",
+    unknown: "結果はまだでも大丈夫。今の勉強の進め方をふりかえっておくと、結果が来たときにすぐ動けるよ。"
+  };
+
+  var CLUB_INFO = {
+    heavy: { label: "週5以上・体力的にきつい", tonightKey: "tonightHeavy" },
+    moderate: { label: "週3〜4・両立できている", tonightKey: "tonightLight" },
+    none: { label: "部活はない・引退済み", tonightKey: "tonightLight" },
+    unknown: { label: "わからない・その他", tonightKey: "tonightLight" }
+  };
+
+  var Q2_CAUSE = ["plan", "review", "club", "scope", "steady"];
+  var Q3_SEVERITY = ["heavy", "mid", "light", "light"];
+  var Q1_TONE = ["good", "normal", "bad", "unknown"];
+  var Q4_CLUB = ["heavy", "moderate", "none", "unknown"];
+
+  var WEEKDAY_JA = ["日", "月", "火", "水", "木", "金", "土"];
+
+  function formatDate(d) {
+    return (d.getMonth() + 1) + "/" + d.getDate() + "(" + WEEKDAY_JA[d.getDay()] + ")";
+  }
+  function addDays(base, n) {
+    var d = new Date(base.getTime());
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+
+  function diagnose(q1Idx, q2Idx, q3Idx, q4Idx, baseDate) {
+    var tone = Q1_TONE[q1Idx];
+    var cause = Q2_CAUSE[q2Idx];
+    var severity = cause === "steady" ? "steady" : Q3_SEVERITY[q3Idx];
+    var club = Q4_CLUB[q4Idx];
+
+    var info = CAUSE_INFO[cause];
+    var openLine = OPEN_LINES[tone];
+    var tonightKey = CLUB_INFO[club].tonightKey;
+    var tonight = info[tonightKey];
+
+    var d3 = addDays(baseDate, 3);
+    var d7 = addDays(baseDate, 7);
+    var d14 = addDays(baseDate, 14);
+
+    var patternId = cause + "_" + severity;
+
+    return {
+      patternId: patternId,
+      typeName: info.name,
+      openLine: openLine,
+      desc: info.desc,
+      tonight: tonight,
+      schedule: [
+        { date: formatDate(d3), label: info.day3 },
+        { date: formatDate(d7), label: info.day7 },
+        { date: formatDate(d14), label: info.day14 }
+      ]
+    };
+  }
+  // ---- ここまで logic.js ----
+
+  var QUESTIONS = {
+    q1: {
+      key: "q1",
+      options: [
+        "良かった・まあまあ自信がある",
+        "普通・可もなく不可もなく",
+        "思うようにいかなかった",
+        "まだ結果が出ていない・わからない"
+      ]
+    },
+    q2: {
+      key: "q2",
+      options: [
+        "計画通りに進まなかった",
+        "できなかった問題の復習が追いつかなかった",
+        "部活で勉強時間が取れなかった",
+        "範囲が広くて手が回らなかった",
+        "特に崩れていない・うまくいった"
+      ]
+    },
+    q3: {
+      key: "q3",
+      options: [
+        "ほぼ毎日、計画通りにいかなかった",
+        "週の半分くらい、崩れた",
+        "たまに崩れたくらい",
+        "あまり当てはまらない"
+      ]
+    },
+    q4: {
+      key: "q4",
+      options: [
+        "週5以上やっていて体力的にきつい",
+        "週3〜4くらいで、両立できている",
+        "部活はしていない・引退済み",
+        "わからない・その他"
+      ]
+    }
+  };
+
+  var state = { q1: null, q2: null, q3: null, q4: null };
+  var ORDER = ["intro", "q1", "q2", "q3", "q4", "result"];
+  var STORAGE_KEY = "chukanKarteResult_v1";
+
+  function show(id){
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++){
+      screens[i].classList.remove("active");
+    }
+    document.getElementById("screen-" + id).classList.add("active");
+
+    var idx = ORDER.indexOf(id);
+    var progressWrap = document.getElementById("progressWrap");
+    if (id === "intro" || id === "result"){
+      progressWrap.style.display = "none";
+    } else {
+      progressWrap.style.display = "block";
+      var qIdx = idx; // q1=1 ... q4=4
+      var pct = Math.round((qIdx / 5) * 100);
+      document.getElementById("progressBar").style.width = pct + "%";
+    }
+    window.scrollTo(0,0);
+  }
+
+  function renderOptions(qkey){
+    var wrap = document.getElementById("opts-" + qkey);
+    wrap.innerHTML = "";
+    QUESTIONS[qkey].options.forEach(function(text, idx){
+      var btn = document.createElement("button");
+      btn.className = "opt";
+      btn.type = "button";
+      btn.textContent = text;
+      btn.addEventListener("click", function(){
+        state[qkey] = idx;
+        goNext(qkey);
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function goNext(fromKey){
+    var map = { q1: "q2", q2: "q3", q3: "q4", q4: "result" };
+    var next = map[fromKey];
+    if (next === "result"){
+      renderResult();
+    }
+    show(next);
+  }
+
+  function renderResult(){
+    var base = new Date();
+    var r = diagnose(state.q1, state.q2, state.q3, state.q4, base);
+
+    document.getElementById("resultName").textContent = r.typeName;
+    document.getElementById("resultOpen").textContent = r.openLine;
+    document.getElementById("resultDesc").textContent = r.desc;
+    document.getElementById("resultTonight").textContent = r.tonight;
+
+    var ul = document.getElementById("resultSchedule");
+    ul.innerHTML = "";
+    r.schedule.forEach(function(item){
+      var li = document.createElement("li");
+      var d = document.createElement("div");
+      d.className = "sched-date";
+      d.textContent = item.date;
+      var l = document.createElement("div");
+      l.className = "sched-label";
+      l.textContent = item.label;
+      li.appendChild(d);
+      li.appendChild(l);
+      ul.appendChild(li);
+    });
+
+    var saveData = {
+      typeName: r.typeName,
+      patternId: r.patternId,
+      savedAt: base.getFullYear() + "/" + (base.getMonth()+1) + "/" + base.getDate()
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+    } catch (e) { /* localStorageが使えない場合は保存をスキップ */ }
+
+    window.__lastResultText = buildCopyText(r);
+  }
+
+  function buildCopyText(r){
+    var lines = [];
+    lines.push("【中間テスト崩れタイプ診断】" + r.typeName);
+    lines.push(r.desc);
+    lines.push("");
+    lines.push("今夜やる1つ: " + r.tonight);
+    lines.push("");
+    r.schedule.forEach(function(item){
+      lines.push(item.date + " " + item.label);
+    });
+    return lines.join("\n");
+  }
+
+  function showPrevBanner(){
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch(e){ raw = null; }
+    if (!raw) return;
+    var data;
+    try { data = JSON.parse(raw); } catch(e){ return; }
+    if (!data || !data.typeName) return;
+
+    var wrap = document.getElementById("prevBannerWrap");
+    var div = document.createElement("div");
+    div.className = "prev-banner";
+    div.textContent = "前回(" + data.savedAt + ")の診断結果: " + data.typeName + "。もう一度やり直すこともできるよ。";
+    wrap.innerHTML = "";
+    wrap.appendChild(div);
+  }
+
+  document.getElementById("startBtn").addEventListener("click", function(){
+    show("q1");
+  });
+
+  renderOptions("q1");
+  renderOptions("q2");
+  renderOptions("q3");
+  renderOptions("q4");
+
+  var backButtons = document.querySelectorAll("[data-back]");
+  for (var i = 0; i < backButtons.length; i++){
+    backButtons[i].addEventListener("click", function(e){
+      var target = e.currentTarget.getAttribute("data-back");
+      show(target);
+    });
+  }
+
+  document.getElementById("restartBtn").addEventListener("click", function(){
+    state = { q1: null, q2: null, q3: null, q4: null };
+    show("intro");
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function(){
+    var text = window.__lastResultText || "";
+    var feedback = document.getElementById("copyFeedback");
+    function done(ok){
+      feedback.textContent = ok ? "コピーしました。メモやLINEに貼り付けて残しておけるよ。" : "コピーできなかったので、画面をスクリーンショットして残してね。";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ done(true); }).catch(function(){ done(false); });
+    } else {
+      done(false);
+    }
+  });
+
+  showPrevBanner();
+  show("intro");
+})();
+</script>
+</body>
+</html>
