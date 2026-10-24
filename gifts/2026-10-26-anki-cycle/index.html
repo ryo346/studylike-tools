@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>部活後10分 暗記サイクル</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#141d36;
+    --gray-bg:#f4f5f7;
+    --gray-line:#dfe2e8;
+    --gray-text:#5b6270;
+    --white:#ffffff;
+    --accent:#2f5d8a;
+    --warn:#a85b3d;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--gray-bg);
+    color:var(--navy-deep);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+  .wrap{ max-width:480px; margin:0 auto; padding:18px 16px 56px; }
+  header.appbar{ text-align:center; padding:10px 0 6px; }
+  header.appbar .brand{ font-size:12px; letter-spacing:.08em; color:var(--gray-text); }
+  header.appbar .title{ font-size:19px; font-weight:700; color:var(--navy); margin-top:4px; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:14px;
+    padding:20px 18px;
+    margin-bottom:16px;
+  }
+  h1.q-title{ font-size:17px; font-weight:700; color:var(--navy-deep); margin:0 0 6px; line-height:1.6; }
+  p.q-sub{ font-size:14px; color:var(--gray-text); margin:0 0 16px; }
+  p.lead{ font-size:14px; color:var(--navy-deep); margin:0 0 14px; }
+  .opt-list{ display:flex; flex-direction:column; gap:10px; }
+  .opt{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--gray-line);
+    border-radius:12px;
+    padding:12px 14px;
+    min-height:44px;
+    font-size:15px;
+    cursor:pointer;
+    background:var(--white);
+  }
+  .opt input{ width:18px; height:18px; flex:none; accent-color:var(--navy); }
+  .opt.checked{ border-color:var(--navy); background:#eef1f7; }
+  .btn{
+    display:block; width:100%;
+    background:var(--navy); color:#fff;
+    border:none; border-radius:12px;
+    padding:14px 16px; min-height:44px;
+    font-size:15px; font-weight:700;
+    text-align:center; cursor:pointer;
+    margin-top:8px;
+  }
+  .btn.secondary{ background:var(--white); color:var(--navy); border:1px solid var(--navy); }
+  .btn.ghost{ background:transparent; color:var(--gray-text); border:1px solid var(--gray-line); font-weight:500; }
+  .btn:disabled{ opacity:.4; }
+  .row-gap{ display:flex; flex-direction:column; gap:10px; }
+  .field label{ display:block; font-size:13px; color:var(--gray-text); margin-bottom:4px; }
+  .field input[type=text]{
+    width:100%; border:1px solid var(--gray-line); border-radius:10px;
+    padding:12px; font-size:15px; min-height:44px; background:#fff;
+  }
+  .field select{
+    width:100%; border:1px solid var(--gray-line); border-radius:10px;
+    padding:12px; font-size:15px; min-height:44px; background:#fff;
+  }
+  .pill{ display:inline-block; font-size:12px; color:var(--accent); background:#e8edf5; border-radius:999px; padding:3px 10px; margin-bottom:8px; }
+  .card-list{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .card-item{ border:1px solid var(--gray-line); border-radius:10px; padding:10px 12px; font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .card-item .txt{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; }
+  .card-item .sub{ font-size:11px; color:var(--gray-text); }
+  .del-btn{ border:none; background:none; color:var(--warn); font-size:13px; min-height:44px; min-width:44px; cursor:pointer; }
+  .timer{ text-align:center; font-size:14px; color:var(--gray-text); margin-bottom:10px; }
+  .timer b{ color:var(--navy); font-size:20px; }
+  .review-counter{ text-align:center; font-size:13px; color:var(--gray-text); margin-bottom:10px; }
+  .flip-card{
+    border:1px solid var(--gray-line); border-radius:16px; background:#fff;
+    min-height:160px; padding:26px 18px; display:flex; align-items:center; justify-content:center;
+    text-align:center; font-size:19px; font-weight:700; color:var(--navy-deep); margin-bottom:14px; line-height:1.6;
+  }
+  .flip-card .back{ font-size:16px; font-weight:400; color:var(--navy-deep); }
+  .flip-card .cap{ display:block; font-size:11px; color:var(--gray-text); font-weight:400; margin-bottom:8px; }
+  .rate-row{ display:flex; gap:8px; }
+  .rate-btn{
+    flex:1; border-radius:12px; padding:12px 6px; min-height:48px; font-size:14px; font-weight:700;
+    border:1px solid var(--gray-line); background:#fff; cursor:pointer;
+  }
+  .rate-btn.ok{ color:#1f6b3e; border-color:#bfe0cc; }
+  .rate-btn.fuzzy{ color:#8a6a1f; border-color:#ecd99b; }
+  .rate-btn.no{ color:var(--warn); border-color:#e3bba9; }
+  .summary-box{ border-left:4px solid var(--navy); background:#eef1f7; border-radius:10px; padding:14px 14px; margin-bottom:14px; }
+  .summary-box h2{ font-size:14px; margin:0 0 6px; color:var(--navy); }
+  .summary-box p{ font-size:14px; margin:0; color:var(--navy-deep); }
+  .sched-list{ display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+  .sched-row{ display:flex; justify-content:space-between; font-size:14px; border-bottom:1px dashed var(--gray-line); padding:4px 0; }
+  .streak-badge{ display:inline-flex; align-items:center; gap:6px; background:var(--navy); color:#fff; border-radius:999px; padding:6px 14px; font-size:13px; font-weight:700; margin-bottom:14px; }
+  .note{ font-size:12px; color:var(--gray-text); }
+  .footer-link{ text-align:center; margin-top:18px; }
+  .footer-link a{ color:var(--accent); font-size:13px; text-decoration:underline; }
+  .divider{ border-top:1px solid var(--gray-line); margin:18px 0; }
+  .subject-tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .tag{ font-size:12px; background:#eef1f7; color:var(--accent); border-radius:8px; padding:4px 8px; }
+  .usage-toggle{ font-size:13px; color:var(--accent); text-align:center; margin:4px 0 0; cursor:pointer; text-decoration:underline; }
+  .hidden{ display:none !important; }
+  .empty-state{ text-align:center; color:var(--gray-text); font-size:14px; padding:18px 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="appbar">
+    <div class="brand">STUDYLIKE塾 スキマ時間アプリ</div>
+    <div class="title">部活後10分 暗記サイクル</div>
+  </header>
+
+  <!-- HOME -->
+  <section id="screen-home" class="screen">
+    <div class="card" id="home-intro-card">
+      <p class="pill">はじめての人へ</p>
+      <h1 class="q-title">自分のカードを、すきま時間に回すだけ</h1>
+      <p class="q-sub">英単語でも、数学の解法でも、社会の一問一答でも。覚えたいものを自分でカードにして、3〜10分のスキマ時間に復習できるツールだよ。一度使ったら、カードと記録はこの端末に自動で保存されるから、次からは続きからすぐ始められるよ。</p>
+      <button class="btn" id="btn-start-setup">はじめる(1分で設定できるよ)</button>
+    </div>
+
+    <div class="card hidden" id="home-return-card">
+      <div id="home-streak-wrap"></div>
+      <h1 class="q-title" id="home-due-title">今日復習すべきカード</h1>
+      <p class="q-sub" id="home-due-sub"></p>
+      <button class="btn" id="btn-start-review">復習をはじめる</button>
+      <button class="btn secondary" id="btn-add-more">カードを追加する</button>
+      <button class="btn ghost" id="btn-change-settings">今日のシーン・時間を選びなおす</button>
+    </div>
+
+    <div class="card">
+      <p class="usage-toggle" id="toggle-usage">使い方をもう一度見る</p>
+      <div id="usage-detail" class="hidden">
+        <p class="note">①科目・今のシーン・使える時間を選ぶ → ②自分のカードを作る(すでにあれば不要) → ③表を見て裏を思い出し、覚えた/あやふや/まだの3段階で答える → ④その日の結果から「今夜やる1つ」と「次にいつ復習するか」が自動で出るよ。覚えた度合いに応じて、次の復習日が1日後→3日後→7日後→14日後→30日後と自動でのびていく仕組み(あやふや・まだのときは早めに戻ってくるよ)。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="screen-settings" class="screen">
+    <div class="card">
+      <p class="pill">今日の設定(4つ)</p>
+      <h1 class="q-title">Q1. 今日やる科目は?</h1>
+      <p class="q-sub">あてはまるものを全部選んでね。決めていなければ「まだ決めていない」でOK。</p>
+      <div class="opt-list" id="opt-subjects"></div>
+    </div>
+
+    <div class="card">
+      <h1 class="q-title">Q2. 今、どのタイミング?</h1>
+      <p class="q-sub">一番近いものを1つ選んでね。</p>
+      <div class="opt-list" id="opt-scene"></div>
+    </div>
+
+    <div class="card">
+      <h1 class="q-title">Q3. 何分くらい使える?</h1>
+      <p class="q-sub">タイマーに合わせてカードを出すよ。</p>
+      <div class="opt-list" id="opt-timer"></div>
+    </div>
+
+    <div class="card">
+      <h1 class="q-title">Q4. 今日は何をする?</h1>
+      <p class="q-sub">新しいカードを作る日か、復習する日かを選んでね。</p>
+      <div class="opt-list" id="opt-mode"></div>
+    </div>
+
+    <button class="btn" id="btn-settings-next">次へ</button>
+    <button class="btn ghost" id="btn-settings-back">ホームに戻る</button>
+  </section>
+
+  <!-- ADD CARDS -->
+  <section id="screen-add" class="screen">
+    <div class="card">
+      <p class="pill">カードを作る</p>
+      <h1 class="q-title">表(問題)と裏(答え)を入れてね</h1>
+      <p class="q-sub">まずは1枚だけでOK。あとからいつでも増やせるよ。</p>
+      <div class="row-gap">
+        <div class="field">
+          <label for="inp-front">表(問題・お題)</label>
+          <input type="text" id="inp-front" placeholder="例:accomplish の意味">
+        </div>
+        <div class="field">
+          <label for="inp-back">裏(答え・説明)</label>
+          <input type="text" id="inp-back" placeholder="例:成し遂げる">
+        </div>
+        <div class="field">
+          <label for="inp-subject">科目</label>
+          <select id="inp-subject"></select>
+        </div>
+      </div>
+      <button class="btn secondary" id="btn-add-card">このカードを追加する</button>
+      <div class="card-list" id="added-card-list"></div>
+      <div class="divider"></div>
+      <button class="btn" id="btn-add-done">追加を終えて次へ</button>
+      <button class="btn ghost" id="btn-add-back">ホームに戻る</button>
+    </div>
+  </section>
+
+  <!-- REVIEW -->
+  <section id="screen-review" class="screen">
+    <div class="card">
+      <div class="timer hidden" id="timer-box">のこり <b id="timer-display">--:--</b></div>
+      <div class="review-counter" id="review-counter"></div>
+
+      <div id="review-empty" class="empty-state hidden">
+        今日復習すべきカードはまだ無いよ。カードを追加するか、すべてのカードをもう一度復習できるよ。
+      </div>
+
+      <div id="review-body" class="hidden">
+        <div class="flip-card" id="flip-card">
+          <span class="cap" id="flip-cap">表(タップで答えを見る)</span>
+          <span id="flip-text"></span>
+        </div>
+        <div class="rate-row hidden" id="rate-row">
+          <button class="rate-btn ok" data-rating="ok">覚えた</button>
+          <button class="rate-btn fuzzy" data-rating="fuzzy">あやふや</button>
+          <button class="rate-btn no" data-rating="no">まだ</button>
+        </div>
+      </div>
+
+      <button class="btn secondary hidden" id="btn-review-all">すべてのカードを復習する</button>
+      <button class="btn ghost" id="btn-review-back">ホームに戻る</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="screen-summary" class="screen">
+    <div class="card">
+      <div id="summary-streak-wrap"></div>
+      <h1 class="q-title">今日の結果</h1>
+      <p class="q-sub" id="summary-count"></p>
+
+      <div class="summary-box">
+        <h2>①今夜やる1つのこと</h2>
+        <p id="summary-tonight"></p>
+      </div>
+
+      <div class="summary-box">
+        <h2>②これからの復習予定(日付つき)</h2>
+        <div class="sched-list" id="summary-schedule"></div>
+      </div>
+
+      <div class="summary-box">
+        <h2>③保存について</h2>
+        <p>このページを閉じても大丈夫。カードと記録はこのブラウザに自動で保存されるから、次に開いたときも今日の続きからすぐ始められるよ。</p>
+      </div>
+
+      <button class="btn" id="btn-summary-home">ホームに戻る</button>
+
+      <div class="divider"></div>
+      <p class="q-sub"><b>一歩先の提案</b><br>今日使った科目と「あやふや・まだ」が多かった分野をそのままこのLINEに送ってみて。残りの日数から、次に手をつける参考書と1週間の配分を一緒に組み立てるよ。気になる人は「面談」と送ってね。</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- 定数・参照データ(参考書マスターBookより抜粋、実在書名のみ) ---------- */
+  var SUBJECTS = [
+    {key:'eng', label:'英語', hint:'単語はターゲット1900・システム英単語などが王道'},
+    {key:'jpn', label:'国語', hint:'古文単語はどれを使っても大差なし、1冊を繰り返すのが近道'},
+    {key:'math', label:'数学', hint:'解法パターンは青チャート・フォーカスゴールドが王道'},
+    {key:'sci', label:'理科', hint:'無機化学・一問一答系は暗記量が多いので早めに着手'},
+    {key:'soc', label:'社会', hint:'一問一答は1冊に絞って繰り返すのが効率的'},
+    {key:'any', label:'まだ決めていない(全部まとめて)', hint:''}
+  ];
+  var SCENES = ['通学中', '部活の前後', '寝る前', '休み時間などのすきま', '決まっていない'];
+  var TIMERS = [
+    {key:'3', label:'3分', sec:180},
+    {key:'5', label:'5分', sec:300},
+    {key:'10', label:'10分', sec:600},
+    {key:'free', label:'タイマーなしで自分のペースで', sec:0}
+  ];
+  var MODES = [
+    {key:'add', label:'新しいカードを追加する'},
+    {key:'review', label:'今日の復習をする'},
+    {key:'both', label:'両方やる'}
+  ];
+  var STAGE_DAYS = [1, 3, 7, 14, 30];
+  var LS_CARDS = 'slk_anki_cards_v1';
+  var LS_SETTINGS = 'slk_anki_settings_v1';
+  var LS_LOG = 'slk_anki_log_v1';
+
+  /* ---------- 純粋ロジック(Node.jsテストでも同じ関数を検証する) ---------- */
+  function clampStage(s){ return Math.max(0, Math.min(s, STAGE_DAYS.length - 1)); }
+
+  function nextStage(stage, rating){
+    stage = stage || 0;
+    if (rating === 'ok') return clampStage(stage + 1);
+    if (rating === 'fuzzy') return clampStage(stage - 1);
+    return 0; // 'no'
+  }
+
+  function addDaysToISO(isoDate, days){
+    var d = new Date(isoDate + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function scheduleAfterRating(card, rating, todayISO){
+    var stage = nextStage(card.stage || 0, rating);
+    var next = addDaysToISO(todayISO, STAGE_DAYS[stage]);
+    var history = (card.history || []).slice();
+    history.push({date: todayISO, rating: rating});
+    return Object.assign({}, card, {
+      stage: stage,
+      nextReview: next,
+      lastRating: rating,
+      history: history
+    });
+  }
+
+  function getDueCards(cards, todayISO, subjects){
+    return cards.filter(function(c){
+      var subjectOk = !subjects || subjects.length === 0 || subjects.indexOf('any') !== -1 || subjects.indexOf(c.subject) !== -1;
+      return subjectOk && c.nextReview <= todayISO;
+    });
+  }
+
+  function buildUpcomingSchedule(cards, todayISO, daysAhead){
+    var map = {};
+    cards.forEach(function(c){
+      if (c.nextReview > todayISO){
+        map[c.nextReview] = (map[c.nextReview] || 0) + 1;
+      }
+    });
+    return Object.keys(map).sort().slice(0, daysAhead).map(function(date){
+      return {date: date, count: map[date]};
+    });
+  }
+
+  function formatDateJP(isoDate){
+    var d = new Date(isoDate + 'T00:00:00');
+    var w = ['日', '月', '火', '水', '木', '金', '土'][d.getDay()];
+    return (d.getMonth() + 1) + '/' + d.getDate() + '(' + w + ')';
+  }
+
+  function pickTonightCard(sessionRatings){
+    var noList = sessionRatings.filter(function(r){ return r.rating === 'no'; });
+    if (noList.length) return noList[noList.length - 1].card;
+    var fuzzy = sessionRatings.filter(function(r){ return r.rating === 'fuzzy'; });
+    if (fuzzy.length) return fuzzy[fuzzy.length - 1].card;
+    return null;
+  }
+
+  function computeStreak(logDates, todayISO){
+    var set = {};
+    logDates.forEach(function(d){ set[d] = true; });
+    var streak = 0;
+    var cur = todayISO;
+    while (set[cur]){
+      streak++;
+      cur = addDaysToISO(cur, -1);
+    }
+    return streak;
+  }
+
+  function todayISO(){
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  // テスト用に公開(本番のUIコードはこの下から別途動く。window.__anki は検証専用の入口)
+  if (typeof window !== 'undefined'){
+    window.__anki = {
+      clampStage: clampStage, nextStage: nextStage, addDaysToISO: addDaysToISO,
+      scheduleAfterRating: scheduleAfterRating, getDueCards: getDueCards,
+      buildUpcomingSchedule: buildUpcomingSchedule, formatDateJP: formatDateJP,
+      pickTonightCard: pickTonightCard, computeStreak: computeStreak, STAGE_DAYS: STAGE_DAYS
+    };
+  }
+
+  /* ---------- 永続化 ---------- */
+  function safeGet(key, fallback){
+    try{
+      var v = localStorage.getItem(key);
+      return v ? JSON.parse(v) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function safeSet(key, val){
+    try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  }
+
+  var state = {
+    cards: safeGet(LS_CARDS, []),
+    settings: safeGet(LS_SETTINGS, null),
+    log: safeGet(LS_LOG, []),
+    sessionRatings: [],
+    reviewQueue: [],
+    timerId: null,
+    timerRemaining: 0
+  };
+
+  /* ---------- 画面切り替え ---------- */
+  function showScreen(id){
+    document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- HOME ---------- */
+  function renderHome(){
+    var hasCards = state.cards.length > 0;
+    document.getElementById('home-intro-card').classList.toggle('hidden', hasCards);
+    document.getElementById('home-return-card').classList.toggle('hidden', !hasCards);
+    if (!hasCards) return;
+
+    var today = todayISO();
+    var subjects = (state.settings && state.settings.subjects) || ['any'];
+    var due = getDueCards(state.cards, today, subjects);
+    document.getElementById('home-due-sub').textContent =
+      due.length > 0
+        ? '今日の設定(科目・シーン・時間)のまま、すぐに復習をはじめられるよ。'
+        : '今日のぶんは無いよ。カードを増やすか、すべてのカードをもう一度復習することもできるよ。';
+    document.getElementById('home-due-title').textContent = '今日復習すべきカードは ' + due.length + ' 枚';
+
+    var streak = computeStreak(state.log, today);
+    var streakWrap = document.getElementById('home-streak-wrap');
+    streakWrap.innerHTML = streak > 0
+      ? '<span class="streak-badge">continue ' + streak + '日目</span>'
+      : '';
+  }
+
+  document.getElementById('btn-start-setup').addEventListener('click', function(){
+    renderSettingsForm();
+    showScreen('screen-settings');
+  });
+  document.getElementById('btn-start-review').addEventListener('click', function(){
+    startReviewFlow(false);
+  });
+  document.getElementById('btn-add-more').addEventListener('click', function(){
+    renderAddScreen();
+    showScreen('screen-add');
+  });
+  document.getElementById('btn-change-settings').addEventListener('click', function(){
+    renderSettingsForm();
+    showScreen('screen-settings');
+  });
+  document.getElementById('toggle-usage').addEventListener('click', function(){
+    document.getElementById('usage-detail').classList.toggle('hidden');
+  });
+
+  /* ---------- SETTINGS ---------- */
+  function renderOptions(containerId, items, type, name, selectedSet){
+    var el = document.getElementById(containerId);
+    el.innerHTML = '';
+    items.forEach(function(item, idx){
+      var key = (typeof item === 'string') ? item : item.key;
+      var label = (typeof item === 'string') ? item : item.label;
+      var hint = (typeof item === 'string') ? '' : (item.hint || '');
+      var id = containerId + '-' + idx;
+      var checked = selectedSet && selectedSet.indexOf(key) !== -1;
+      var wrap = document.createElement('label');
+      wrap.className = 'opt' + (checked ? ' checked' : '');
+      wrap.setAttribute('for', id);
+      wrap.innerHTML =
+        '<input type="' + type + '" id="' + id + '" name="' + name + '" value="' + key + '"' + (checked ? ' checked' : '') + '>' +
+        '<span>' + label + (hint ? '<br><span class="note">' + hint + '</span>' : '') + '</span>';
+      el.appendChild(wrap);
+      wrap.querySelector('input').addEventListener('change', function(){
+        wrap.classList.toggle('checked', this.checked);
+        if (type === 'radio'){
+          el.querySelectorAll('.opt').forEach(function(o){ o.classList.remove('checked'); });
+          wrap.classList.add('checked');
+        }
+      });
+    });
+  }
+
+  function renderSettingsForm(){
+    var s = state.settings || {};
+    renderOptions('opt-subjects', SUBJECTS, 'checkbox', 'subjects', s.subjects || []);
+    renderOptions('opt-scene', SCENES, 'radio', 'scene', s.scene ? [s.scene] : []);
+    renderOptions('opt-timer', TIMERS, 'radio', 'timer', s.timer ? [s.timer] : []);
+    renderOptions('opt-mode', MODES, 'radio', 'mode', s.mode ? [s.mode] : []);
+  }
+
+  document.getElementById('btn-settings-back').addEventListener('click', function(){ renderHome(); showScreen('screen-home'); });
+
+  document.getElementById('btn-settings-next').addEventListener('click', function(){
+    var subjects = Array.prototype.slice.call(document.querySelectorAll('input[name=subjects]:checked')).map(function(i){ return i.value; });
+    var sceneEl = document.querySelector('input[name=scene]:checked');
+    var timerEl = document.querySelector('input[name=timer]:checked');
+    var modeEl = document.querySelector('input[name=mode]:checked');
+
+    if (subjects.length === 0){ subjects = ['any']; }
+    if (!sceneEl || !timerEl || !modeEl){
+      alert('Q2〜Q4はそれぞれ1つ選んでね。');
+      return;
+    }
+    state.settings = { subjects: subjects, scene: sceneEl.value, timer: timerEl.value, mode: modeEl.value };
+    safeSet(LS_SETTINGS, state.settings);
+
+    if (state.settings.mode === 'review'){
+      startReviewFlow(false);
+    } else {
+      renderAddScreen();
+      showScreen('screen-add');
+    }
+  });
+
+  /* ---------- ADD CARDS ---------- */
+  function renderAddScreen(){
+    var sel = document.getElementById('inp-subject');
+    sel.innerHTML = '';
+    SUBJECTS.filter(function(s){ return s.key !== 'any'; }).forEach(function(s){
+      var o = document.createElement('option');
+      o.value = s.key; o.textContent = s.label;
+      sel.appendChild(o);
+    });
+    var preferred = state.settings && state.settings.subjects && state.settings.subjects.filter(function(k){ return k !== 'any'; })[0];
+    if (preferred) sel.value = preferred;
+    renderAddedCardList();
+  }
+
+  function renderAddedCardList(){
+    var list = document.getElementById('added-card-list');
+    var recent = state.cards.slice(-5).reverse();
+    list.innerHTML = recent.map(function(c){
+      var subLabel = (SUBJECTS.filter(function(s){ return s.key === c.subject; })[0] || {}).label || c.subject;
+      return '<div class="card-item"><div class="txt"><b>' + escapeHtml(c.front) + '</b><div class="sub">' + subLabel + '</div></div>' +
+        '<button class="del-btn" data-id="' + c.id + '">削除</button></div>';
+    }).join('');
+    list.querySelectorAll('.del-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var targetId = btn.getAttribute('data-id');
+        state.cards = state.cards.filter(function(c){ return c.id !== targetId; });
+        safeSet(LS_CARDS, state.cards);
+        renderAddedCardList();
+      });
+    });
+  }
+
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  document.getElementById('btn-add-card').addEventListener('click', function(){
+    var front = document.getElementById('inp-front').value.trim();
+    var back = document.getElementById('inp-back').value.trim();
+    var subject = document.getElementById('inp-subject').value;
+    if (!front || !back){
+      alert('表と裏の両方を入れてね。');
+      return;
+    }
+    var today = todayISO();
+    state.cards.push({
+      id: 'c' + Date.now() + Math.random().toString(16).slice(2),
+      front: front, back: back, subject: subject,
+      stage: 0, nextReview: today, lastRating: null, history: []
+    });
+    safeSet(LS_CARDS, state.cards);
+    document.getElementById('inp-front').value = '';
+    document.getElementById('inp-back').value = '';
+    document.getElementById('inp-front').focus();
+    renderAddedCardList();
+  });
+
+  document.getElementById('btn-add-back').addEventListener('click', function(){ renderHome(); showScreen('screen-home'); });
+
+  document.getElementById('btn-add-done').addEventListener('click', function(){
+    if (state.settings && state.settings.mode === 'both'){
+      startReviewFlow(false);
+    } else {
+      renderHome();
+      showScreen('screen-home');
+    }
+  });
+
+  /* ---------- REVIEW ---------- */
+  function startReviewFlow(forceAll){
+    var today = todayISO();
+    var subjects = (state.settings && state.settings.subjects) || ['any'];
+    var due = forceAll ? state.cards.slice() : getDueCards(state.cards, today, subjects);
+
+    state.sessionRatings = [];
+    state.reviewQueue = due;
+
+    document.getElementById('btn-review-all').classList.toggle('hidden', due.length > 0);
+    document.getElementById('review-empty').classList.toggle('hidden', due.length > 0);
+    document.getElementById('review-body').classList.toggle('hidden', due.length === 0);
+
+    showScreen('screen-review');
+
+    clearTimer();
+    var timerKey = (state.settings && state.settings.timer) || 'free';
+    var timerDef = TIMERS.filter(function(t){ return t.key === timerKey; })[0] || TIMERS[3];
+    if (timerDef.sec > 0 && due.length > 0){
+      document.getElementById('timer-box').classList.remove('hidden');
+      state.timerRemaining = timerDef.sec;
+      updateTimerDisplay();
+      state.timerId = setInterval(function(){
+        state.timerRemaining -= 1;
+        updateTimerDisplay();
+        if (state.timerRemaining <= 0){
+          clearTimer();
+          finishReview();
+        }
+      }, 1000);
+    } else {
+      document.getElementById('timer-box').classList.add('hidden');
+    }
+
+    if (due.length > 0) renderCurrentCard();
+  }
+
+  function clearTimer(){
+    if (state.timerId){ clearInterval(state.timerId); state.timerId = null; }
+  }
+
+  function updateTimerDisplay(){
+    var m = Math.floor(state.timerRemaining / 60);
+    var s = state.timerRemaining % 60;
+    document.getElementById('timer-display').textContent = m + ':' + String(s).padStart(2, '0');
+  }
+
+  document.getElementById('btn-review-all').addEventListener('click', function(){ startReviewFlow(true); });
+  document.getElementById('btn-review-back').addEventListener('click', function(){
+    clearTimer();
+    renderHome();
+    showScreen('screen-home');
+  });
+
+  var flipped = false;
+  document.getElementById('flip-card').addEventListener('click', function(){
+    if (state.reviewQueue.length === 0) return;
+    flipped = !flipped;
+    renderCurrentCard();
+  });
+
+  function renderCurrentCard(){
+    if (state.reviewQueue.length === 0){ finishReview(); return; }
+    var card = state.reviewQueue[0];
+    document.getElementById('review-counter').textContent = '残り ' + state.reviewQueue.length + ' 枚';
+    document.getElementById('flip-cap').textContent = flipped ? '裏(答え)' : '表(タップで答えを見る)';
+    document.getElementById('flip-text').innerHTML = flipped
+      ? '<span class="back">' + escapeHtml(card.back) + '</span>'
+      : escapeHtml(card.front);
+    document.getElementById('rate-row').classList.toggle('hidden', !flipped);
+  }
+
+  document.querySelectorAll('.rate-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var rating = this.getAttribute('data-rating');
+      var card = state.reviewQueue.shift();
+      var today = todayISO();
+      var updated = scheduleAfterRating(card, rating, today);
+      state.cards = state.cards.map(function(c){ return c.id === updated.id ? updated : c; });
+      safeSet(LS_CARDS, state.cards);
+      state.sessionRatings.push({card: updated, rating: rating});
+      flipped = false;
+      renderCurrentCard();
+    });
+  });
+
+  function finishReview(){
+    clearTimer();
+    var today = todayISO();
+    if (state.log.indexOf(today) === -1){
+      state.log.push(today);
+      safeSet(LS_LOG, state.log);
+    }
+    renderSummary();
+    showScreen('screen-summary');
+  }
+
+  /* ---------- SUMMARY ---------- */
+  function renderSummary(){
+    var today = todayISO();
+    var okCount = state.sessionRatings.filter(function(r){ return r.rating === 'ok'; }).length;
+    var fuzzyCount = state.sessionRatings.filter(function(r){ return r.rating === 'fuzzy'; }).length;
+    var noCount = state.sessionRatings.filter(function(r){ return r.rating === 'no'; }).length;
+    var total = state.sessionRatings.length;
+
+    document.getElementById('summary-count').textContent =
+      total > 0
+        ? '今日は ' + total + ' 枚復習したよ(覚えた' + okCount + '・あやふや' + fuzzyCount + '・まだ' + noCount + ')'
+        : '今日はまだ復習していないよ。カードを追加して、また挑戦してみてね。';
+
+    var tonight = pickTonightCard(state.sessionRatings);
+    var tonightEl = document.getElementById('summary-tonight');
+    if (tonight){
+      tonightEl.textContent = '「' + tonight.front + '」をもう一度、寝る前に見返してね。';
+    } else if (total > 0) {
+      tonightEl.textContent = '今日は全部「覚えた」だったよ。寝る前に、今日やった内容をざっと振り返ってみてね。';
+    } else {
+      tonightEl.textContent = 'まずはカードを1枚作って、今夜ひと目だけ見返してみてね。';
+    }
+
+    var sched = buildUpcomingSchedule(state.cards, today, 7);
+    var schedEl = document.getElementById('summary-schedule');
+    schedEl.innerHTML = sched.length > 0
+      ? sched.map(function(s){ return '<div class="sched-row"><span>' + formatDateJP(s.date) + '</span><span>' + s.count + '枚</span></div>'; }).join('')
+      : '<p class="note">これからの予定はまだ無いよ。カードを増やすと、ここに次の復習日が自動で出てくるよ。</p>';
+
+    var streak = computeStreak(state.log, today);
+    document.getElementById('summary-streak-wrap').innerHTML = streak > 0
+      ? '<span class="streak-badge">continue ' + streak + '日目</span>'
+      : '';
+  }
+
+  document.getElementById('btn-summary-home').addEventListener('click', function(){ renderHome(); showScreen('screen-home'); });
+
+  /* ---------- 初期化 ---------- */
+  renderHome();
+  showScreen('screen-home');
+})();
+</script>
+</body>
+</html>
