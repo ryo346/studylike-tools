@@ -1,0 +1,717 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>5科目 参考書ペース逆算シミュレーター</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#141d36;
+    --gray-bg:#f4f5f7;
+    --gray-line:#dfe2e8;
+    --gray-text:#5b6270;
+    --white:#ffffff;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--gray-bg);
+    color:var(--navy-deep);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 48px;
+  }
+  header.appbar{
+    text-align:center;
+    padding:14px 0 10px;
+  }
+  header.appbar .brand{
+    font-size:12px;
+    letter-spacing:.08em;
+    color:var(--gray-text);
+  }
+  header.appbar .title{
+    font-size:17px;
+    font-weight:700;
+    color:var(--navy);
+    margin-top:4px;
+    line-height:1.5;
+  }
+  .progress{
+    height:4px;
+    background:var(--gray-line);
+    border-radius:4px;
+    overflow:hidden;
+    margin:10px 0 22px;
+  }
+  .progress-bar{
+    height:100%;
+    background:var(--navy);
+    width:0%;
+    transition:width .25s ease;
+  }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:14px;
+    padding:20px 18px;
+    margin-bottom:16px;
+  }
+  h1.q-title{
+    font-size:17px;
+    font-weight:700;
+    color:var(--navy-deep);
+    margin:0 0 6px;
+    line-height:1.6;
+  }
+  p.q-sub{
+    font-size:14px;
+    color:var(--gray-text);
+    margin:0 0 18px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  button.opt{
+    width:100%;
+    min-height:52px;
+    text-align:left;
+    padding:13px 16px;
+    font-size:15px;
+    line-height:1.5;
+    color:var(--navy-deep);
+    background:var(--white);
+    border:1.5px solid var(--gray-line);
+    border-radius:10px;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.opt:active{
+    background:var(--gray-bg);
+    border-color:var(--navy);
+  }
+  .nav-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:4px;
+  }
+  button.link-btn{
+    background:none;
+    border:none;
+    color:var(--gray-text);
+    font-size:14px;
+    padding:10px 4px;
+    min-height:44px;
+    cursor:pointer;
+  }
+  .intro h1{
+    font-size:20px;
+    color:var(--navy-deep);
+    line-height:1.5;
+    margin:4px 0 14px;
+  }
+  .intro p{
+    font-size:14.5px;
+    color:var(--gray-text);
+    margin:0 0 14px;
+  }
+  .badge{
+    display:inline-block;
+    font-size:12px;
+    color:var(--navy);
+    background:#e8ecf5;
+    border-radius:20px;
+    padding:4px 12px;
+    margin-bottom:12px;
+  }
+  button.primary{
+    width:100%;
+    min-height:52px;
+    background:var(--navy);
+    color:var(--white);
+    border:none;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button.primary:active{ background:var(--navy-deep); }
+  button.secondary{
+    width:100%;
+    min-height:52px;
+    background:var(--white);
+    color:var(--navy);
+    border:1.5px solid var(--navy);
+    border-radius:10px;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    margin-top:10px;
+  }
+  .result-type{
+    font-size:13px;
+    color:var(--gray-text);
+    margin-bottom:4px;
+  }
+  .result-name{
+    font-size:19px;
+    font-weight:700;
+    color:var(--navy);
+    margin:0 0 12px;
+    line-height:1.6;
+  }
+  .result-desc{
+    font-size:14.5px;
+    color:var(--navy-deep);
+    margin-bottom:16px;
+  }
+  .section-label{
+    font-size:13px;
+    font-weight:700;
+    color:var(--navy);
+    border-left:4px solid var(--navy);
+    padding-left:8px;
+    margin:18px 0 10px;
+  }
+  .tonight-box{
+    background:var(--gray-bg);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:15px;
+    line-height:1.7;
+  }
+  ul.schedule{
+    list-style:none;
+    margin:0;
+    padding:0;
+  }
+  ul.schedule li{
+    display:flex;
+    gap:12px;
+    padding:10px 0;
+    border-bottom:1px solid var(--gray-line);
+    font-size:14.5px;
+  }
+  ul.schedule li:last-child{ border-bottom:none; }
+  .sched-date{
+    flex:0 0 76px;
+    color:var(--navy);
+    font-weight:700;
+    font-size:14px;
+  }
+  .sched-label{ color:var(--navy-deep); }
+  .after-note{
+    margin-top:14px;
+    font-size:13px;
+    color:var(--gray-text);
+    background:var(--gray-bg);
+    border-radius:10px;
+    padding:12px 14px;
+    line-height:1.7;
+  }
+  .cta-box{
+    margin-top:18px;
+    background:var(--navy);
+    color:var(--white);
+    border-radius:12px;
+    padding:16px 18px;
+  }
+  .cta-box p{
+    font-size:14px;
+    line-height:1.7;
+    margin:0;
+  }
+  .small-note{
+    font-size:12px;
+    color:var(--gray-text);
+    text-align:center;
+    margin-top:18px;
+    line-height:1.7;
+  }
+  .prev-banner{
+    background:#e8ecf5;
+    border-radius:10px;
+    padding:12px 14px;
+    font-size:13.5px;
+    color:var(--navy-deep);
+    margin-bottom:16px;
+    line-height:1.7;
+  }
+  .prev-banner button{
+    margin-top:8px;
+  }
+  .copy-feedback{
+    font-size:12.5px;
+    color:var(--navy);
+    text-align:center;
+    margin-top:8px;
+    min-height:16px;
+  }
+  footer.footnote{
+    text-align:center;
+    font-size:11.5px;
+    color:#9aa0ab;
+    margin-top:28px;
+    line-height:1.7;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand">STUDYLIKE塾</div>
+    <div class="title">5科目 参考書ペース逆算シミュレーター</div>
+  </header>
+
+  <div id="progressWrap" class="progress" style="display:none;">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- 0: イントロ -->
+  <section class="screen active" id="screen-intro">
+    <div id="prevBannerWrap"></div>
+    <div class="card intro">
+      <span class="badge">4つの質問・約90秒</span>
+      <h1>その参考書、今のペースで本番までに終わる?</h1>
+      <p>科目・今の到達度・使える時間・本番までの期間を選ぶと、<strong>次に進むべき1冊</strong>と、<strong>今夜やること</strong>、<strong>何週に1冊ペースで進めればいいか(日付つき)</strong>が出るよ。</p>
+      <p>英語・国語・数学・理科・社会、5科目どれでも診断できます。結果はこの端末に保存されるから、あとで見返すこともできるよ。</p>
+      <button class="primary" id="startBtn">はじめる</button>
+    </div>
+  </section>
+
+  <!-- 1: Q1 科目 -->
+  <section class="screen" id="screen-q1">
+    <div class="card">
+      <h1 class="q-title">Q1. 今回シミュレーションしたい科目は?</h1>
+      <p class="q-sub">一番気になっている科目を1つ選んでね。</p>
+      <div class="options" id="opts-q1"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="intro">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 2: Q2 到達度 -->
+  <section class="screen" id="screen-q2">
+    <div class="card">
+      <h1 class="q-title">Q2. 選んだ科目、今の到達度は?</h1>
+      <p class="q-sub">模試の結果でも、今やっている参考書のレベルでもOK。感覚で選んでね。</p>
+      <div class="options" id="opts-q2"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="q1">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 3: Q3 学習時間 -->
+  <section class="screen" id="screen-q3">
+    <div class="card">
+      <h1 class="q-title">Q3. 平日、その科目に使える時間は?</h1>
+      <p class="q-sub">部活がある日の「現実的な」時間で選んでね。</p>
+      <div class="options" id="opts-q3"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="q2">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 4: Q4 本番までの期間 -->
+  <section class="screen" id="screen-q4">
+    <div class="card">
+      <h1 class="q-title">Q4. 共通テスト・一般入試の本番(目標)までは?</h1>
+      <p class="q-sub">だいたいの期間でOK。志望校がまだでも大丈夫。</p>
+      <div class="options" id="opts-q4"></div>
+    </div>
+    <div class="nav-row">
+      <button class="link-btn" data-back="q3">戻る</button>
+      <span></span>
+    </div>
+  </section>
+
+  <!-- 5: 結果 -->
+  <section class="screen" id="screen-result">
+    <div class="card">
+      <div class="result-type">シミュレーション結果</div>
+      <h2 class="result-name" id="resultName"></h2>
+      <p id="resultOpen" style="font-size:14.5px; color:#5b6270; margin:0 0 12px;"></p>
+      <p class="result-desc" id="resultDesc"></p>
+
+      <div class="section-label">① 今夜やる1つのこと</div>
+      <div class="tonight-box" id="resultTonight"></div>
+
+      <div class="section-label">② 本番までの予定(日付つき)</div>
+      <ul class="schedule" id="resultSchedule"></ul>
+
+      <div class="after-note" id="resultAfterNote" style="display:none;"></div>
+
+      <div class="cta-box">
+        <p>ここまで読んだら、一歩先へ。<br>今の学年・志望校と、この診断結果(科目・到達度・ペース)を塾のLINEに送ってくれたら、本番までの年間ルートを一緒に組むよ。「面談してみたい」でもOK。</p>
+      </div>
+
+      <button class="secondary" id="copyBtn">結果をコピーして保存する</button>
+      <div class="copy-feedback" id="copyFeedback"></div>
+      <button class="secondary" id="restartBtn">もう一度診断する</button>
+    </div>
+  </section>
+
+  <footer class="footnote">STUDYLIKE塾 / 紹介する参考書は目安です。学校の教材・塾の指示がある場合はそちらを優先してください。</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---- logic.js の内容(そのまま) ----
+  var AXIS = {
+    "英語": {
+      label: "英語",
+      stages: [
+        { book: "大岩のいちばんはじめの英文法", note: "英文法の土台を作る段階。ここが抜けていると、この先の参考書が全部つらくなる。" },
+        { book: "英文法ポラリス1", note: "共通テストレベルの文法知識を固める段階。" },
+        { book: "英文法ポラリス2(またはNext Stage・Vintage・Scramble)", note: "中堅私大・中堅国公立レベルの文法知識まで広げる段階。" },
+        { book: "英文法ポラリス3", note: "難関大レベルの文法知識まで仕上げる段階。" }
+      ],
+      afterNote: "ここから上(英文法ファイナル問題集 難関大学編など)は、多くの受験生にはオーバーワークになりがち。必要かどうかは面談で一緒に判断しよう。"
+    },
+    "国語": {
+      label: "国語(古文を例に)",
+      stages: [
+        { book: "富井の古典文法をはじめからていねいに", note: "古文文法の入門。古文が読めない原因の多くはここでの抜け。" },
+        { book: "ステップアップノート30", note: "古文文法の演習で、知識を使える形に仕上げる段階。" },
+        { book: "古文上達 基礎編", note: "覚えた文法知識を、実際の文章の中で使う練習をする段階。" },
+        { book: "古文上達 読解と演習56 演習編", note: "入試レベルの古文を時間内に読み切る力をつける段階。" }
+      ],
+      afterNote: "ここから上(最強の古文など)は難関大特化。基礎編・演習編が仕上がっていれば十分なことが多い。現代文・漢文のルートは面談で確認しよう。"
+    },
+    "数学": {
+      label: "数学(網羅系を例に)",
+      stages: [
+        { book: "白チャート", note: "教科書レベルの土台づくり。公式の使い方を体に入れる段階。" },
+        { book: "黄チャート", note: "共通テスト〜中堅大レベルの網羅。基本パターンを増やす段階。" },
+        { book: "青チャート(またはフォーカスゴールド)", note: "難関大の入試問題につながる標準〜発展パターンの網羅。" },
+        { book: "一対一対応の演習", note: "チャートで覚えたパターンを、実際の入試問題で使う練習をする段階。" }
+      ],
+      afterNote: "ここから上(新数学スタンダード演習・上級問題精講など)は、志望校の二次試験の難易度次第。面談で過去問と相談しながら決めよう。"
+    },
+    "理科": {
+      label: "理科(物理を例に)",
+      stages: [
+        { book: "橋元の物理基礎(または宇宙一わかりやすい高校物理)", note: "物理現象のイメージをつかむ入門段階。" },
+        { book: "物理のエッセンス", note: "公式の意味を理解しながら基本問題に慣れる段階。" },
+        { book: "良問の風", note: "入試基礎〜標準レベルの問題演習をする段階。" },
+        { book: "名問の森", note: "難関大レベルの問題演習。ここまでで多くの大学に対応できる。" }
+      ],
+      afterNote: "化学・生物を選んでいる場合や、理論物理への道標のような最上位レベルが必要かは面談で確認しよう(多くの受験生には不要なレベル)。"
+    },
+    "社会": {
+      label: "社会(日本史を例に)",
+      stages: [
+        { book: "金谷の日本史(「なぜ」と「流れ」がわかる本)", note: "歴史の流れをストーリーとして理解する入門段階。" },
+        { book: "日本史一問一答(山川)", note: "流れを理解したあと、用語を知識として定着させる段階。" },
+        { book: "大学入試 全レベル問題集 日本史", note: "志望校レベルの問題形式に慣れる演習段階。" },
+        { book: "実力をつける日本史100題", note: "難関大レベルの記述・論述にも対応できる仕上げ段階。" }
+      ],
+      afterNote: "世界史・地理・公共政治経済倫理を選んでいる場合の参考書ルートは面談で確認しよう。"
+    }
+  };
+
+  var WEEKDAY_JA = ["日", "月", "火", "水", "木", "金", "土"];
+
+  function formatDate(d) {
+    return (d.getMonth() + 1) + "/" + d.getDate() + "(" + WEEKDAY_JA[d.getDay()] + ")";
+  }
+  function addDays(base, n) {
+    var d = new Date(base.getTime());
+    d.setDate(d.getDate() + n);
+    return d;
+  }
+
+  var SUBJ_KEY_MAP = ["英語", "国語", "数学", "理科", "社会", "英語"]; // 5=わからない→英語を基準に案内
+  var COMPLETED_MAP = [0, 1, 2, 3, 0]; // 4=わからない→新しく始める扱い
+  var WEEKS_MAP = [4, 10, 20, 36, 24]; // 0:1ヶ月以内 1:1-3ヶ月 2:3-6ヶ月 3:6ヶ月以上 4:わからない(目安24週)
+
+  function tonightMessage(timeIdx, book, unknownStage) {
+    if (unknownStage) {
+      return "到達度がまだ自分でもはっきりしない人へ:まずは「" + book + "」の最初の数ページだけ解いてみて、すらすらできるかどうかで本当のスタート地点を確認しよう。";
+    }
+    switch (timeIdx) {
+      case 0: return "今夜は「" + book + "」を開いて、最初の1ページだけ目を通す。";
+      case 1: return "今夜は「" + book + "」を30分、最初のまとまりだけ進める。";
+      case 2: return "今夜は「" + book + "」を60分、1章分を目標に進める。";
+      case 3: return "今夜は「" + book + "」を90分使って、2章分くらい進める。";
+      default: return "今夜はまず15分だけ時計を見ながら「" + book + "」を開いて、自分がどのくらい進むペースか確かめる。";
+    }
+  }
+
+  function diagnose(q1, q2, q3, q4, baseDate) {
+    var unknownSubject = (q1 === 5);
+    var subjKey = SUBJ_KEY_MAP[q1];
+    var axis = AXIS[subjKey];
+
+    var unknownStage = (q2 === 4);
+    var completed = COMPLETED_MAP[q2];
+    var nextIdx = completed;           // 0..3
+    var remaining = 4 - completed;     // 4..1
+    var nextStage = axis.stages[nextIdx];
+
+    var unknownExam = (q4 === 4);
+    var totalWeeks = WEEKS_MAP[q4];
+    var weeksPerBook = Math.max(1, Math.round(totalWeeks / remaining));
+
+    var tonight = tonightMessage(q3, nextStage.book, unknownStage);
+
+    var d1 = addDays(baseDate, 7);
+    var d2 = addDays(baseDate, weeksPerBook * 7);
+    var d3 = addDays(baseDate, totalWeeks * 7);
+
+    var schedule = [
+      { date: formatDate(d1), label: "「" + nextStage.book + "」の最初の章(または最初の20問程度)を終える" },
+      { date: formatDate(d2), label: "「" + nextStage.book + "」を1冊仕上げて、次の段階に進む(目安:" + weeksPerBook + "週に1冊ペース)" },
+      { date: formatDate(d3), label: unknownExam ? "目安の本番日。志望校が決まったら、ここをその日付に書き換えよう" : "本番(目標)。ここまでに" + subjKey + "は残り" + remaining + "冊分を進める計算" }
+    ];
+
+    var openLine = unknownSubject
+      ? "どれが一番ピンチか迷っている人は、まず土台になりやすい英語から整理するのがおすすめ。今回は英語で計算するよ。"
+      : "「" + subjKey + "」で計算するね。";
+
+    var desc = subjKey + "は今、「" + nextStage.book + "」に進むタイミング。" + nextStage.note;
+
+    return {
+      patternId: q1 + "_" + q2 + "_" + q3 + "_" + q4,
+      subjLabel: axis.label,
+      resultName: subjKey + " / 次は「" + nextStage.book + "」",
+      openLine: openLine,
+      desc: desc,
+      tonight: tonight,
+      schedule: schedule,
+      afterNote: (remaining === 1) ? axis.afterNote : null
+    };
+  }
+  // ---- ここまで logic.js ----
+
+  var QUESTIONS = {
+    q1: {
+      key: "q1",
+      options: [
+        "英語", "国語", "数学", "理科", "社会",
+        "正直どれが一番ピンチか分からない"
+      ]
+    },
+    q2: {
+      key: "q2",
+      options: [
+        "新しく始める(ほぼ初めから)",
+        "基礎は一通り終わった",
+        "標準レベルまで仕上げた",
+        "難関レベルに挑戦中",
+        "わからない・自己判断が難しい"
+      ]
+    },
+    q3: {
+      key: "q3",
+      options: [
+        "30分未満",
+        "30〜60分",
+        "60〜90分",
+        "90分以上",
+        "日によってまちまちで分からない"
+      ]
+    },
+    q4: {
+      key: "q4",
+      options: [
+        "1ヶ月以内",
+        "1〜3ヶ月",
+        "3〜6ヶ月",
+        "6ヶ月以上",
+        "まだ決めていない・志望校も未定"
+      ]
+    }
+  };
+
+  var state = { q1: null, q2: null, q3: null, q4: null };
+  var ORDER = ["intro", "q1", "q2", "q3", "q4", "result"];
+  var STORAGE_KEY = "paceSimResult_v1";
+
+  function show(id) {
+    var screens = document.querySelectorAll(".screen");
+    for (var i = 0; i < screens.length; i++) {
+      screens[i].classList.remove("active");
+    }
+    document.getElementById("screen-" + id).classList.add("active");
+
+    var idx = ORDER.indexOf(id);
+    var progressWrap = document.getElementById("progressWrap");
+    if (id === "intro" || id === "result") {
+      progressWrap.style.display = "none";
+    } else {
+      progressWrap.style.display = "block";
+      var pct = Math.round((idx / 5) * 100);
+      document.getElementById("progressBar").style.width = pct + "%";
+    }
+    window.scrollTo(0, 0);
+  }
+
+  function renderOptions(qkey) {
+    var wrap = document.getElementById("opts-" + qkey);
+    wrap.innerHTML = "";
+    QUESTIONS[qkey].options.forEach(function(text, idx){
+      var btn = document.createElement("button");
+      btn.className = "opt";
+      btn.type = "button";
+      btn.textContent = text;
+      btn.addEventListener("click", function(){
+        state[qkey] = idx;
+        goNext(qkey);
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function goNext(fromKey) {
+    var map = { q1: "q2", q2: "q3", q3: "q4", q4: "result" };
+    var next = map[fromKey];
+    if (next === "result") {
+      renderResult();
+    }
+    show(next);
+  }
+
+  function renderResult() {
+    var base = new Date();
+    var r = diagnose(state.q1, state.q2, state.q3, state.q4, base);
+
+    document.getElementById("resultName").textContent = r.resultName;
+    document.getElementById("resultOpen").textContent = r.openLine;
+    document.getElementById("resultDesc").textContent = r.desc;
+    document.getElementById("resultTonight").textContent = r.tonight;
+
+    var ul = document.getElementById("resultSchedule");
+    ul.innerHTML = "";
+    r.schedule.forEach(function(item){
+      var li = document.createElement("li");
+      var d = document.createElement("div");
+      d.className = "sched-date";
+      d.textContent = item.date;
+      var l = document.createElement("div");
+      l.className = "sched-label";
+      l.textContent = item.label;
+      li.appendChild(d);
+      li.appendChild(l);
+      ul.appendChild(li);
+    });
+
+    var afterNoteEl = document.getElementById("resultAfterNote");
+    if (r.afterNote) {
+      afterNoteEl.textContent = r.afterNote;
+      afterNoteEl.style.display = "block";
+    } else {
+      afterNoteEl.style.display = "none";
+    }
+
+    var saveData = {
+      resultName: r.resultName,
+      patternId: r.patternId,
+      savedAt: base.getFullYear() + "/" + (base.getMonth()+1) + "/" + base.getDate()
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saveData));
+    } catch (e) { /* localStorageが使えない場合は保存をスキップ */ }
+
+    window.__lastResultText = buildCopyText(r);
+  }
+
+  function buildCopyText(r) {
+    var lines = [];
+    lines.push("【参考書ペース逆算シミュレーター】" + r.resultName);
+    lines.push(r.desc);
+    lines.push("");
+    lines.push("今夜やる1つ: " + r.tonight);
+    lines.push("");
+    r.schedule.forEach(function(item){
+      lines.push(item.date + " " + item.label);
+    });
+    if (r.afterNote) {
+      lines.push("");
+      lines.push(r.afterNote);
+    }
+    return lines.join("\n");
+  }
+
+  function showPrevBanner() {
+    var raw;
+    try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { raw = null; }
+    if (!raw) return;
+    var data;
+    try { data = JSON.parse(raw); } catch (e) { return; }
+    if (!data || !data.resultName) return;
+
+    var wrap = document.getElementById("prevBannerWrap");
+    var div = document.createElement("div");
+    div.className = "prev-banner";
+    div.textContent = "前回(" + data.savedAt + ")の結果: " + data.resultName + "。もう一度やり直すこともできるよ。";
+    wrap.innerHTML = "";
+    wrap.appendChild(div);
+  }
+
+  document.getElementById("startBtn").addEventListener("click", function(){
+    show("q1");
+  });
+
+  renderOptions("q1");
+  renderOptions("q2");
+  renderOptions("q3");
+  renderOptions("q4");
+
+  var backButtons = document.querySelectorAll("[data-back]");
+  for (var i = 0; i < backButtons.length; i++) {
+    backButtons[i].addEventListener("click", function(e){
+      var target = e.currentTarget.getAttribute("data-back");
+      show(target);
+    });
+  }
+
+  document.getElementById("restartBtn").addEventListener("click", function(){
+    state = { q1: null, q2: null, q3: null, q4: null };
+    show("intro");
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function(){
+    var text = window.__lastResultText || "";
+    var feedback = document.getElementById("copyFeedback");
+    function done(ok) {
+      feedback.textContent = ok ? "コピーしました。メモやLINEに貼り付けて残しておけるよ。" : "コピーできなかったので、画面をスクリーンショットして残してね。";
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ done(true); }).catch(function(){ done(false); });
+    } else {
+      done(false);
+    }
+  });
+
+  showPrevBanner();
+  show("intro");
+
+  // テスト用フック(総当たりテストのNode.jsスクリプトから呼び出す)
+  window.__diagnoseForTest = diagnose;
+})();
+</script>
+</body>
+</html>
