@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>模試を受けた後、何してる?直し方チェッカー</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#141d36;
+    --gray-bg:#f4f5f7;
+    --gray-line:#dfe2e8;
+    --gray-text:#5b6270;
+    --white:#ffffff;
+    --accent:#2f5d8a;
+    --warn:#a85b3d;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--gray-bg);
+    color:var(--navy-deep);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+  .wrap{ max-width:480px; margin:0 auto; padding:18px 16px 56px; }
+  header.appbar{ text-align:center; padding:10px 0 6px; }
+  header.appbar .brand{ font-size:12px; letter-spacing:.08em; color:var(--gray-text); }
+  header.appbar .title{ font-size:18px; font-weight:700; color:var(--navy); margin-top:4px; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{
+    background:var(--white);
+    border:1px solid var(--gray-line);
+    border-radius:14px;
+    padding:20px 18px;
+    margin-bottom:16px;
+  }
+  .progress{ font-size:12px; color:var(--gray-text); margin-bottom:8px; text-align:center; }
+  h1.q-title{ font-size:17px; font-weight:700; color:var(--navy-deep); margin:0 0 6px; line-height:1.6; }
+  p.q-sub{ font-size:14px; color:var(--gray-text); margin:0 0 16px; }
+  p.lead{ font-size:14px; color:var(--navy-deep); margin:0 0 14px; }
+  .opt-list{ display:flex; flex-direction:column; gap:10px; }
+  .opt{
+    display:flex; align-items:center; gap:10px;
+    border:1px solid var(--gray-line);
+    border-radius:12px;
+    padding:12px 14px;
+    min-height:44px;
+    font-size:15px;
+    cursor:pointer;
+    background:var(--white);
+  }
+  .opt input{ width:18px; height:18px; flex:none; accent-color:var(--navy); }
+  .opt.checked{ border-color:var(--navy); background:#eef1f7; }
+  .btn{
+    display:block; width:100%;
+    background:var(--navy); color:#fff;
+    border:none; border-radius:12px;
+    padding:14px 16px; min-height:44px;
+    font-size:15px; font-weight:700;
+    text-align:center; cursor:pointer;
+    margin-top:8px;
+  }
+  .btn.secondary{ background:var(--white); color:var(--navy); border:1px solid var(--navy); }
+  .btn.ghost{ background:transparent; color:var(--gray-text); border:1px solid var(--gray-line); font-weight:500; }
+  .btn:disabled{ opacity:.4; cursor:default; }
+  .pill{ display:inline-block; font-size:12px; color:var(--accent); background:#e8edf5; border-radius:999px; padding:3px 10px; margin-bottom:8px; }
+  .result-head{ text-align:center; margin-bottom:6px; }
+  .result-head .type-name{ font-size:20px; font-weight:700; color:var(--navy); margin:4px 0 2px; }
+  .result-head .type-desc{ font-size:13px; color:var(--gray-text); }
+  .section-title{ font-size:13px; font-weight:700; color:var(--accent); margin:0 0 8px; }
+  .box-tonight{
+    background:#eef1f7; border:1px solid var(--gray-line); border-radius:12px;
+    padding:14px 14px; margin-bottom:16px; font-size:15px;
+  }
+  .plan-row{
+    display:flex; gap:10px; border-bottom:1px solid var(--gray-line);
+    padding:10px 0; font-size:13px; align-items:flex-start;
+  }
+  .plan-row:last-child{ border-bottom:none; }
+  .plan-row .d{ flex:none; width:64px; color:var(--gray-text); font-weight:700; }
+  .plan-row .t{ flex:1; color:var(--navy-deep); }
+  .book-box{
+    border:1px solid var(--gray-line); border-radius:12px; padding:14px; margin-bottom:16px;
+    background:#fff;
+  }
+  .book-box .lv{ font-size:12px; color:var(--accent); }
+  .book-box .name{ font-size:15px; font-weight:700; color:var(--navy-deep); margin:2px 0 4px; }
+  .book-box .note{ font-size:13px; color:var(--gray-text); }
+  .cta{
+    background:var(--navy-deep); color:#fff; border-radius:12px; padding:16px 16px; margin-top:4px;
+    font-size:14px;
+  }
+  .cta b{ color:#fff; }
+  .foot-note{ text-align:center; font-size:12px; color:var(--gray-text); margin-top:18px; }
+  .saved-banner{
+    background:#fff; border:1px solid var(--gray-line); border-radius:12px; padding:12px 14px;
+    margin-bottom:14px; font-size:13px; color:var(--gray-text); display:flex; justify-content:space-between; align-items:center; gap:10px;
+  }
+  .saved-banner button{
+    flex:none; min-height:44px; padding:0 14px; border-radius:10px; border:1px solid var(--navy);
+    background:#fff; color:var(--navy); font-size:13px; font-weight:700; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand">STUDYLIKE塾</div>
+    <div class="title">模試の直し方チェッカー</div>
+  </header>
+
+  <!-- 保存済み結果バナー -->
+  <div id="savedBanner" class="saved-banner" style="display:none;">
+    <span>前回の診断結果が保存されています</span>
+    <button id="btnLoadSaved" type="button">見る</button>
+  </div>
+
+  <!-- START -->
+  <section class="screen active" id="screen-start">
+    <div class="card">
+      <span class="pill">所要時間 約60秒・6問</span>
+      <h1 class="q-title">『模試を受けた後、何してる?』</h1>
+      <p class="lead">
+        模試が返ってきても、答え合わせだけで終わらせていませんか。<br>
+        6つの質問に答えると、あなたの「直し方タイプ」と、今夜やること・これからの7日間の予定が分かります。
+      </p>
+      <button class="btn" id="btnStart" type="button">診断をはじめる</button>
+    </div>
+  </section>
+
+  <!-- QUESTIONS -->
+  <section class="screen" id="screen-q">
+    <div class="progress" id="qProgress">1 / 6</div>
+    <div class="card">
+      <h1 class="q-title" id="qTitle"></h1>
+      <p class="q-sub" id="qSub"></p>
+      <div class="opt-list" id="qOptList"></div>
+    </div>
+    <button class="btn secondary" id="btnBack" type="button">ひとつ前の質問に戻る</button>
+  </section>
+
+  <!-- RESULT -->
+  <section class="screen" id="screen-result">
+    <div class="card">
+      <div class="result-head">
+        <span class="pill" id="rPill">あなたの直し方タイプ</span>
+        <div class="type-name" id="rTypeName"></div>
+        <div class="type-desc" id="rTypeDesc"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">① 今夜やる1つのこと</div>
+      <div class="box-tonight" id="rTonight"></div>
+
+      <div class="section-title">② これからの7日間の予定</div>
+      <div id="rPlan"></div>
+    </div>
+
+    <div class="card" id="rBookCard">
+      <div class="section-title">③ あなたの教科・レベル向けの1冊</div>
+      <div class="book-box" id="rBookBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">一歩先の提案</div>
+      <div class="cta">
+        直し方を変えても、1〜2ヶ月やっても偏差値が動かないときは、「直し方」ではなく「参考書の選び方」や「学習の環境」の問題かもしれません。<br><br>
+        そのときは、LINEで<b>今の学年</b>と<b>志望校</b>を送ってください。プロが一緒に見直します。
+      </div>
+    </div>
+
+    <button class="btn secondary" id="btnRetry" type="button">もう一度診断する</button>
+    <p class="foot-note">診断結果はこの端末に保存され、次回この画面を開くと復元できます。</p>
+  </section>
+</div>
+
+<script>
+/* ============ データ定義(参考書マスターBook記載のみを使用) ============ */
+var SUBJECTS = ['英語','国語','数学','理科','社会','特にない・全体的に課題'];
+
+// レベル帯: 0=40台以下 1=50台 2=60以上 3=わからない(→50台相当で案内)
+var BOOK_REC = [
+  // 英語(単語)
+  [
+    {name:'英単語ターゲット1200', lv:'難易度1・入門', note:'旺文社。英語がよほど苦手な人向けの最初の1冊。短期で仕上げて次の単語帳へ。'},
+    {name:'英単語ターゲット1900', lv:'難易度3・標準', note:'旺文社。大学受験の王道の1冊目。受験学年まで反復して使い続ける。'},
+    {name:'鉄壁(鉄緑会東大英単語熟語)', lv:'難易度4・発展', note:'KADOKAWA。難関大志望者向けの2冊目。高1冬〜高2のうちに始めたい。'},
+    {name:'システム英単語Basic', lv:'難易度2・基礎', note:'駿台文庫。偏差値が分からない人への入り口。基礎を固めたら英単語ターゲット1900へ。'}
+  ],
+  // 国語(現代文)
+  [
+    {name:'ゼロから覚醒 はじめよう現代文', lv:'難易度1・入門', note:'かんき出版。「ルール化」された読み方を学べる1冊目。'},
+    {name:'船口のゼロから読み解く最強の現代文', lv:'難易度2・基礎', note:'Gakken。偏差値60〜70でも成績が安定しない人にも向く、現代文の1冊目として第一推奨。'},
+    {name:'現代文読解力の開発講座', lv:'難易度4・発展', note:'駿台文庫。現代文の偏差値60が安定している人向け。要約を通じて論理を掴む。'},
+    {name:'田村のやさしく語る現代文', lv:'難易度1・入門', note:'代々木ライブラリー。現代文の読み方をゼロから学ぶ人向け。'}
+  ],
+  // 数学(網羅系)
+  [
+    {name:'白チャート(IA/IIB/III)', lv:'難易度1・入門', note:'数研出版。数学がよほど苦手な人向け。教科書レベルを基礎から丁寧に。'},
+    {name:'黄チャート(IA/IIB/III)', lv:'難易度2・基礎', note:'数研出版。地方公立・中堅私大レベル志望者のスタート地点。'},
+    {name:'青チャート(IA/IIB/III)', lv:'難易度3〜4・標準〜発展', note:'数研出版。MARCH〜難関国立まで幅広く使える、受験数学の王道の網羅系。'},
+    {name:'基礎問題精講(IA/IIB/III)', lv:'難易度2・基礎', note:'旺文社。短期間で入試基礎を固めたい人向け。厳選された入試標準問題で構成。'}
+  ],
+  // 理科(物理を例とする。化学は難易度表のみ考え方は同じ)
+  [
+    {name:'橋元の物理基礎をはじめからていねいに', lv:'難易度1・入門', note:'東進ブックス。物理基礎を初めて学ぶ人向け。※化学が苦手な場合も考え方は同じで、入門の講義系から1冊選ぶ。'},
+    {name:'物理のエッセンス(力学・波動/熱・電磁気・原子)', lv:'難易度2〜3・基礎〜標準', note:'河合出版。共通テスト〜地方国公立を目指す人の1冊目。'},
+    {name:'名問の森 物理', lv:'難易度4・発展', note:'河合出版。難関国公立・早慶・医学部を目指す人向けの演習書。'},
+    {name:'宇宙一わかりやすい高校物理', lv:'難易度1〜2・入門', note:'学研。物理に苦手意識が強く、まず雰囲気をつかみたい人向け。'}
+  ],
+  // 社会(日本史を例とする)
+  [
+    {name:'金谷の日本史「なぜ」と「流れ」がわかる本', lv:'難易度1〜2・入門', note:'東進ブックス。教科書が苦手な人向け、日本史の流れを最初につかむ1冊。'},
+    {name:'時代と流れで覚える!日本史B用語', lv:'難易度3・標準', note:'文英堂。共通テスト〜私大レベルを目指す人向け。流れの中で用語を覚える。'},
+    {name:'日本史標準問題精講', lv:'難易度4・発展', note:'旺文社。難関大入試の典型的な問題を厳選して収録。'},
+    {name:'山川一問一答 日本史', lv:'難易度2〜3・基礎〜標準', note:'山川出版社。用語を効率よく覚えたい人向け。通史を学んだ後に使う。'}
+  ],
+  // 特にない
+  null
+];
+
+// 教科インデックス0..4 と レベルインデックス0..3 に対応する「章・分野」の呼び方(予定表の表示用)
+var SUBJECT_AREA = ['単語','現代文の読解','数学の網羅系問題集','物理(または化学)の基礎','日本史(または他の社会科目)'];
+
+// Q3(直しの深さ)=タイプの元。0=答え見て終わり 1=解説見て解き直す 2=パターン化 3=ほぼない
+var TYPE_META = [
+  {key:'A', name:'答え見て満足タイプ', desc:'答え合わせで安心して、直しが止まっている状態。'},
+  {key:'B', name:'解き直すだけタイプ', desc:'解き直しまではできている。あとは原因の分類が課題。'},
+  {key:'C', name:'パターン化できてるタイプ', desc:'すでに良い直し方ができている。あとは量と科目を広げるだけ。'},
+  {key:'D', name:'直しほぼ皆無タイプ', desc:'悪いのは「やり方」ではなく、まだ「向き合えていない」だけ。今夜は向き合うことだけでOK。'}
+];
+
+var TONIGHT_ACTIONS = [
+  '直近の模試で間違えた問題を1問だけ選び、「なぜ間違えたか」を①知識不足 ②読み間違い ③時間切れ ④ケアレスミス の4つから1つ選んで、スマホのメモか模試の余白に書いてください。',
+  '直近の模試で間違えた問題を1問選び、解説を読まずに自分の力でもう一度解いてください。そのうえで、最初に間違えた原因を一言で書いてください。',
+  '直近の模試で間違えた問題の中から「次に出たら絶対に正解したい」1問を選び、同じミスをしたことがある他の問題を1つ思い出して、2問を並べて見比べてください。',
+  '模試の結果を1回だけ見返して、「一番ショックだった1問」を1つだけ選び、スマホのメモに書いてください。直しは今夜はしなくて大丈夫です。向き合うことが今夜の目標です。'
+];
+
+var TIMING_PREFIX_EARLY = 'すでに早めに動けている人への今夜のタスクです。';
+var TIMING_PREFIX_LATE = '直しが後回しになりがちな人への今夜のタスクです。無理に長くやらなくて大丈夫です。';
+
+// 部活時間インデックス0..3 → 1日の目安分数
+var BUKATSU_MINUTES = [15, 30, 45, 60];
+var BUKATSU_LABEL = ['15分', '30分', '45分', '60分以上'];
+
+/* ============ ロジック(DOMに依存しない純粋関数) ============ */
+function calcTypeIndex(depthIdx){
+  // depthIdx: Q3の選択肢index 0..3 がそのままタイプindexに対応
+  return depthIdx;
+}
+
+function getBookRec(subjectIdx, levelIdx){
+  var table = BOOK_REC[subjectIdx];
+  if(!table) return null;
+  var li = (levelIdx===3) ? 1 : levelIdx; // わからない→50台相当の案内を使う
+  return table[li];
+}
+
+function buildTonightText(typeIdx, timingIdx){
+  var prefix = (timingIdx<=1) ? TIMING_PREFIX_EARLY : TIMING_PREFIX_LATE;
+  return prefix + '\n\n' + TONIGHT_ACTIONS[typeIdx];
+}
+
+function buildWeekPlan(typeIdx, subjectIdx, levelIdx, bukatsuIdx, gradeIdx){
+  var minutes = BUKATSU_MINUTES[bukatsuIdx];
+  var minutesLabel = BUKATSU_LABEL[bukatsuIdx];
+  var areaName = (subjectIdx<=4) ? SUBJECT_AREA[subjectIdx] : '苦手が一番大きい科目';
+  var book = getBookRec(subjectIdx, levelIdx);
+  var bookName = book ? book.name : '今使っている参考書';
+  var gradeNote = (gradeIdx===2) ? '(残り時間を意識して、1問あたりのスピードも気にしてください)' : '';
+
+  var days = [];
+  var today = new Date();
+  var dayNames = ['日','月','火','水','木','金','土'];
+
+  var tasks = [
+    TONIGHT_ACTIONS[typeIdx],
+    '模試の答案から、' + areaName + 'に関係する間違いをもう1問選んで、' + minutesLabel + 'で解き直してください。',
+    '今週間違えた問題を並べて、同じ原因のものをグループにしてください(' + minutesLabel + ')。' + gradeNote,
+    '『' + bookName + '』を開いて、今の間違いに近い分野を1項目だけ読むか解いてください(' + minutesLabel + ')。',
+    areaName + '以外の科目でも、直近の模試の間違いを1問だけ同じやり方で直してください(' + minutesLabel + ')。',
+    '今週直した問題だけを集めて、自分でミニテストを作り、もう一度解いてください(' + minutesLabel + ')。',
+    'この1週間でできた直しを振り返り、次の模試までにやることを3行で書いてください。'
+  ];
+
+  for(var i=0;i<7;i++){
+    var d = new Date(today.getTime() + i*24*60*60*1000);
+    var label = (d.getMonth()+1) + '/' + d.getDate() + '(' + dayNames[d.getDay()] + ')';
+    days.push({ date:label, task:tasks[i] });
+  }
+  return days;
+}
+
+function runDiagnosis(answers){
+  // answers = { grade, timing, depth, subject, level, bukatsu } 各インデックス
+  var typeIdx = calcTypeIndex(answers.depth);
+  var meta = TYPE_META[typeIdx];
+  var tonight = buildTonightText(typeIdx, answers.timing);
+  var plan = buildWeekPlan(typeIdx, answers.subject, answers.level, answers.bukatsu, answers.grade);
+  var book = getBookRec(answers.subject, answers.level);
+  return { typeIdx:typeIdx, typeName:meta.name, typeDesc:meta.desc, tonight:tonight, plan:plan, book:book, subjectIdx:answers.subject };
+}
+
+/* ============ 質問データ ============ */
+var QUESTIONS = [
+  { key:'grade', title:'学年は?', sub:'', options:['高1','高2','高3・既卒'] },
+  { key:'timing', title:'模試を受けたら、直し(見直し)はいつやっていますか?', sub:'一番近いものを選んでください。', options:[
+    '当日〜2日以内にやる','1週間以内にはやる','結果が返ってきてから、だいぶ後にやる','ほとんどやらない・忘れる'
+  ]},
+  { key:'depth', title:'直しをするとき、実際に何をしていますか?', sub:'', options:[
+    '答え・解説を読んで終わり','解説を読んで、自分でもう一度解いてみる','同じ間違いのパターンを書き出して、他の問題でも確認する','直しをしたことがほぼない'
+  ]},
+  { key:'subject', title:'一番「このままだと伸びない」と感じている教科は?', sub:'', options:['英語','国語','数学','理科','社会','特にない・全体的に課題'] },
+  { key:'level', title:'直近の模試の偏差値は、だいたいどのくらいですか?', sub:'正確でなくて大丈夫です。', options:['40台以下','50台','60以上','模試をまだ受けていない・わからない'] },
+  { key:'bukatsu', title:'部活や習い事で、平日に使える勉強時間はどれくらいですか?', sub:'', options:[
+    'ほとんど時間がない(部活が週5以上など)','1〜2時間くらい','2時間以上ある','部活はもう引退した・もともと時間はある'
+  ]}
+];
+
+/* ============ 画面制御 ============ */
+var state = { qi:0, answers:{} };
+var STORAGE_KEY = 'sl_moshi_naoshi_v1';
+
+function showScreen(id){
+  var list = document.querySelectorAll('.screen');
+  for(var i=0;i<list.length;i++){ list[i].classList.remove('active'); }
+  document.getElementById(id).classList.add('active');
+}
+
+function renderQuestion(){
+  var q = QUESTIONS[state.qi];
+  document.getElementById('qProgress').textContent = (state.qi+1) + ' / ' + QUESTIONS.length;
+  document.getElementById('qTitle').textContent = q.title;
+  document.getElementById('qSub').textContent = q.sub || '';
+  var wrap = document.getElementById('qOptList');
+  wrap.innerHTML = '';
+  var prevAnswer = state.answers[q.key];
+  for(var i=0;i<q.options.length;i++){
+    (function(idx){
+      var div = document.createElement('label');
+      div.className = 'opt' + (prevAnswer===idx ? ' checked' : '');
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = 'q_' + q.key;
+      if(prevAnswer===idx){ input.checked = true; }
+      var span = document.createElement('span');
+      span.textContent = q.options[idx];
+      div.appendChild(input);
+      div.appendChild(span);
+      input.addEventListener('change', function(){
+        state.answers[q.key] = idx;
+        setTimeout(function(){ goNext(); }, 120);
+      });
+      wrap.appendChild(div);
+    })(i);
+  }
+  document.getElementById('btnBack').style.visibility = (state.qi===0) ? 'hidden' : 'visible';
+  showScreen('screen-q');
+}
+
+function goNext(){
+  if(state.qi < QUESTIONS.length-1){
+    state.qi++;
+    renderQuestion();
+  } else {
+    finishDiagnosis();
+  }
+}
+
+function goBack(){
+  if(state.qi>0){ state.qi--; renderQuestion(); }
+}
+
+function finishDiagnosis(){
+  var result = runDiagnosis(state.answers);
+  renderResult(result);
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers:state.answers, savedAt: Date.now() }));
+  }catch(e){ /* 保存できない場合は何もしない(private windowなど) */ }
+}
+
+function renderResult(result){
+  document.getElementById('rTypeName').textContent = result.typeName;
+  document.getElementById('rTypeDesc').textContent = result.typeDesc;
+  document.getElementById('rTonight').textContent = result.tonight;
+
+  var planWrap = document.getElementById('rPlan');
+  planWrap.innerHTML = '';
+  for(var i=0;i<result.plan.length;i++){
+    var row = document.createElement('div');
+    row.className = 'plan-row';
+    var d = document.createElement('div'); d.className='d'; d.textContent = result.plan[i].date;
+    var t = document.createElement('div'); t.className='t'; t.textContent = result.plan[i].task;
+    row.appendChild(d); row.appendChild(t);
+    planWrap.appendChild(row);
+  }
+
+  var bookCard = document.getElementById('rBookCard');
+  if(result.book){
+    bookCard.style.display = 'block';
+    document.getElementById('rBookBox').innerHTML =
+      '<div class="lv">' + result.book.lv + '</div>' +
+      '<div class="name">' + result.book.name + '</div>' +
+      '<div class="note">' + result.book.note + '</div>';
+  } else {
+    bookCard.style.display = 'block';
+    document.getElementById('rBookBox').innerHTML =
+      '<div class="note">教科を1つに絞れていない人は、まずどれか1科目だけを選んで直しのサイクルを作るところから始めてください。全部を同時に直そうとすると、どれも中途半端になりやすいです。</div>';
+  }
+
+  showScreen('screen-result');
+}
+
+function tryRestoreSaved(){
+  try{
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    var data = JSON.parse(raw);
+    if(!data || !data.answers) return;
+    document.getElementById('savedBanner').style.display = 'flex';
+    document.getElementById('btnLoadSaved').addEventListener('click', function(){
+      state.answers = data.answers;
+      var result = runDiagnosis(state.answers);
+      renderResult(result);
+    });
+  }catch(e){ /* 復元できなければ無視 */ }
+}
+
+document.getElementById('btnStart').addEventListener('click', function(){
+  state.qi = 0;
+  state.answers = {};
+  renderQuestion();
+});
+document.getElementById('btnBack').addEventListener('click', goBack);
+document.getElementById('btnRetry').addEventListener('click', function(){
+  state.qi = 0;
+  state.answers = {};
+  renderQuestion();
+});
+
+tryRestoreSaved();
+
+/* ============ テスト用エクスポート(ブラウザでは何もしない) ============ */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    SUBJECTS: SUBJECTS, BOOK_REC: BOOK_REC, TYPE_META: TYPE_META,
+    calcTypeIndex: calcTypeIndex, getBookRec: getBookRec,
+    buildTonightText: buildTonightText, buildWeekPlan: buildWeekPlan,
+    runDiagnosis: runDiagnosis, QUESTIONS: QUESTIONS
+  };
+}
+</script>
+</body>
+</html>
