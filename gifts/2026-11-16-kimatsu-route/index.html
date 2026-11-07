@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>期末までの神ルート 科目優先度マッチャー</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#141d36;
+    --gray-bg:#f4f5f7;
+    --gray-line:#dfe2e8;
+    --gray-text:#5b6270;
+    --white:#ffffff;
+    --accent:#c0562f;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--gray-bg);
+    color:var(--navy-deep);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 56px;
+  }
+  header.appbar{ text-align:center; padding:14px 0 10px; }
+  header.appbar .brand{ font-size:12px; letter-spacing:.08em; color:var(--gray-text); }
+  header.appbar .title{ font-size:17px; font-weight:700; color:var(--navy); margin-top:4px; line-height:1.5; }
+  .progress{ height:4px; background:var(--gray-line); border-radius:4px; overflow:hidden; margin:10px 0 22px; }
+  .progress-bar{ height:100%; background:var(--navy); width:0%; transition:width .25s ease; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{ background:var(--white); border:1px solid var(--gray-line); border-radius:14px; padding:20px 18px; margin-bottom:16px; }
+  h1.q-title{ font-size:17px; font-weight:700; color:var(--navy-deep); margin:0 0 6px; line-height:1.6; }
+  p.q-sub{ font-size:14px; color:var(--gray-text); margin:0 0 18px; }
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  button.opt{
+    width:100%; min-height:52px; text-align:left; padding:13px 16px;
+    font-size:15px; line-height:1.5; color:var(--navy-deep);
+    background:var(--white); border:1.5px solid var(--gray-line); border-radius:10px;
+    cursor:pointer; -webkit-tap-highlight-color: transparent;
+  }
+  button.opt.selected{ background:var(--gray-bg); border-color:var(--navy); font-weight:700; }
+  button.opt:active{ background:var(--gray-bg); border-color:var(--navy); }
+  button.opt .sub{ display:block; font-size:12.5px; color:var(--gray-text); margin-top:3px; font-weight:400; }
+  .nav-row{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+  button.link-btn{ background:none; border:none; color:var(--gray-text); font-size:14px; padding:10px 4px; min-height:44px; cursor:pointer; }
+  button.primary-btn{
+    width:100%; min-height:52px; background:var(--navy); color:var(--white); border:none;
+    border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color: transparent;
+  }
+  button.primary-btn:active{ background:var(--navy-deep); }
+  button.ghost-btn{
+    width:100%; min-height:48px; background:var(--white); color:var(--navy); border:1.5px solid var(--navy);
+    border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; margin-top:10px;
+  }
+  .intro h1{ font-size:21px; font-weight:800; color:var(--navy-deep); line-height:1.5; margin:18px 0 10px; }
+  .intro p{ font-size:14.5px; color:var(--gray-text); margin:0 0 10px; }
+  .intro .meta{ font-size:12.5px; color:var(--gray-text); margin-top:16px; }
+  .intro .meta span{ display:inline-block; background:var(--gray-bg); border-radius:6px; padding:4px 9px; margin:3px 3px 0 0; }
+  input[type="date"]{
+    width:100%; min-height:48px; font-size:16px; padding:10px 12px; border:1.5px solid var(--gray-line);
+    border-radius:10px; color:var(--navy-deep); background:var(--white); font-family:inherit;
+  }
+  .rank-row{ display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--gray-line); }
+  .rank-row:last-child{ border-bottom:none; }
+  .rank-num{ width:26px; height:26px; border-radius:50%; background:var(--navy); color:var(--white); font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .rank-body{ flex:1; min-width:0; }
+  .rank-name{ font-size:15px; font-weight:700; color:var(--navy-deep); }
+  .rank-bar-bg{ height:8px; background:var(--gray-bg); border-radius:4px; margin-top:5px; overflow:hidden; }
+  .rank-bar{ height:100%; background:var(--navy); border-radius:4px; }
+  .box-label{ font-size:12px; font-weight:700; color:var(--accent); letter-spacing:.03em; margin-bottom:6px; }
+  .box-text{ font-size:15px; color:var(--navy-deep); line-height:1.75; }
+  .sched-item{ display:flex; gap:12px; padding:9px 0; border-bottom:1px dashed var(--gray-line); }
+  .sched-item:last-child{ border-bottom:none; }
+  .sched-date{ width:92px; flex-shrink:0; font-size:12.5px; color:var(--gray-text); font-weight:700; padding-top:1px; }
+  .sched-text{ font-size:14.5px; color:var(--navy-deep); }
+  .book-card{ background:var(--gray-bg); border-radius:10px; padding:14px 14px; margin-top:4px; }
+  .book-title{ font-size:14.5px; font-weight:700; color:var(--navy-deep); }
+  .book-note{ font-size:13px; color:var(--gray-text); margin-top:4px; line-height:1.7; }
+  footer.footnote{ text-align:center; font-size:11.5px; color:var(--gray-text); margin-top:18px; line-height:1.8; }
+  .hr{ height:1px; background:var(--gray-line); margin:16px 0; border:none; }
+  .q-count{ font-size:12px; color:var(--gray-text); text-align:right; margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="appbar">
+    <div class="brand">STUDYLIKE塾</div>
+    <div class="title">期末までの神ルート<br>科目優先度マッチャー</div>
+  </header>
+
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+
+  <!-- INTRO -->
+  <div class="screen active" id="screen-intro">
+    <div class="card intro">
+      <h1>期末まで、何から手をつける?</h1>
+      <p>5つの質問に答えると、今のあなたに合わせて「英語・国語・数学・理科・社会」5科目の優先順位ランキングと、今夜やる1つのこと、期末までの日付つきの予定が出ます。</p>
+      <p>英語・国語・数学・理科(物理/化学/生物)・社会(日本史/世界史/地理/公共・政治経済・倫理)、全科目に対応しています。</p>
+      <div class="meta"><span>所要約60〜90秒</span><span>質問5問</span><span>結果は保存できます</span></div>
+    </div>
+    <button class="primary-btn" onclick="App.start()">はじめる</button>
+    <button class="ghost-btn" id="restoreBtn" style="display:none" onclick="App.restore()">前回の結果を見る</button>
+    <footer class="footnote">STUDYLIKE塾 / 紹介する参考書は目安です。学校・塾の指示がある場合はそちらを優先してください。</footer>
+  </div>
+
+  <!-- Q1 学年 -->
+  <div class="screen" id="screen-q1">
+    <div class="card">
+      <div class="q-count">Q1 / 5</div>
+      <h1 class="q-title">今の学年は?</h1>
+      <p class="q-sub">一番近いものを選んでね。</p>
+      <div class="options" id="opts-grade"></div>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- Q2 文理 -->
+  <div class="screen" id="screen-q2">
+    <div class="card">
+      <div class="q-count">Q2 / 5</div>
+      <h1 class="q-title">文系・理系は?</h1>
+      <p class="q-sub">まだ決めていなくてもOK。今の感覚で選んでね。</p>
+      <div class="options" id="opts-track"></div>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- Q3 レベル -->
+  <div class="screen" id="screen-q3">
+    <div class="card">
+      <div class="q-count">Q3 / 5</div>
+      <h1 class="q-title">今の実力・志望レベルは?</h1>
+      <p class="q-sub">今の自分の感覚でOK。あとで変えられるから、ざっくり選んでね。</p>
+      <div class="options" id="opts-level"></div>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- Q4 期末までの日付 -->
+  <div class="screen" id="screen-q4">
+    <div class="card">
+      <div class="q-count">Q4 / 5</div>
+      <h1 class="q-title">期末テスト、いつから?</h1>
+      <p class="q-sub">一番早い科目の初日を選んでね。まだ決まっていなければ下のボタンでOK。</p>
+      <input type="date" id="examDate">
+      <button class="ghost-btn" onclick="App.setUnknownDate()">まだ決まっていない</button>
+      <div id="dateHint" style="font-size:12.5px;color:var(--gray-text);margin-top:10px;"></div>
+      <button class="primary-btn" style="margin-top:16px" onclick="App.confirmDate()">次へ</button>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- Q5 ピンチ科目 -->
+  <div class="screen" id="screen-q5">
+    <div class="card">
+      <div class="q-count">Q5 / 5</div>
+      <h1 class="q-title">今一番ピンチな科目は?</h1>
+      <p class="q-sub">1つだけ選んでね。「特にない」でもOK。</p>
+      <div class="options" id="opts-pinch"></div>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- Q5b 理科の科目 -->
+  <div class="screen" id="screen-q5b">
+    <div class="card">
+      <div class="q-count">Q5 / 5(くわしく)</div>
+      <h1 class="q-title">理科の中でピンチなのは?</h1>
+      <p class="q-sub">一番苦手・不安な科目を1つ選んでね。</p>
+      <div class="options" id="opts-rika"></div>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- Q5c 社会の科目 -->
+  <div class="screen" id="screen-q5c">
+    <div class="card">
+      <div class="q-count">Q5 / 5(くわしく)</div>
+      <h1 class="q-title">社会の中でピンチなのは?</h1>
+      <p class="q-sub">一番苦手・不安な科目を1つ選んでね。</p>
+      <div class="options" id="opts-shakai"></div>
+    </div>
+    <div class="nav-row"><button class="link-btn" onclick="App.back()">戻る</button><span></span></div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="screen" id="screen-result">
+    <div class="card">
+      <div class="box-label">あなたの科目優先度ランキング</div>
+      <div id="rankList"></div>
+    </div>
+
+    <div class="card">
+      <div class="box-label">今夜やる1つのこと</div>
+      <div class="box-text" id="tonightText"></div>
+    </div>
+
+    <div class="card">
+      <div class="box-label">期末までの予定(日付つき)</div>
+      <div id="schedList"></div>
+    </div>
+
+    <div class="card">
+      <div class="box-label" id="bookLabel">ピンチ科目の次の1冊</div>
+      <div class="book-card">
+        <div class="book-title" id="bookTitle"></div>
+        <div class="book-note" id="bookNote"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="box-label">一歩先の提案</div>
+      <div class="box-text">ランキングと予定は、今の情報から出した「目安」です。学年・志望校の配点・部活の予定まで入れて組み直すと、もっと精度が上がります。公式LINEで今の学年と志望校を送ってくれたら、プロと一緒に期末までのルートを見直せます。</div>
+    </div>
+
+    <button class="primary-btn" onclick="App.saveResult()" id="saveBtn">結果を保存する</button>
+    <button class="ghost-btn" onclick="App.restartAll()">もう一度やり直す</button>
+    <footer class="footnote">STUDYLIKE塾 / 紹介する参考書は目安です。学校・塾の指示がある場合はそちらを優先してください。</footer>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  // ---- 参考書データ(参考書マスターBookの記載のみ。難易度1〜5に対応) ----
+  var BOOKS = {
+    "英語": [
+      {lv:1, book:"英単語ターゲット1200", note:"出版社:旺文社。英語がよほど苦手な人向けの最初の1冊。短期で仕上げて1900へ接続。"},
+      {lv:2, book:"英単語ターゲット1400", note:"出版社:旺文社。共通テストレベルを効率よくカバー。終えたら1900へ。"},
+      {lv:3, book:"英単語ターゲット1900", note:"出版社:旺文社。大学受験の王道の1冊目。受験学年まで反復し続けるベース単語帳。"},
+      {lv:4, book:"鉄壁(鉄緑会東大英単語熟語)", note:"出版社:KADOKAWA。難関大志望者向け。標準単語帳を終えた人の2冊目。"},
+      {lv:5, book:"リンガメタリカ", note:"出版社:Z会。早慶などの難関私大、東京外国語大・国際教養大志望者向け。"}
+    ],
+    "国語": [
+      {lv:1, book:"田村のやさしく語る現代文", note:"出版社:代々木ライブラリー。現代文の読み方をゼロから学ぶ人向け。"},
+      {lv:2, book:"船口のゼロから読み解く最強の現代文", note:"出版社:Gakken。現代文が苦手な人の1冊目として第一推奨。"},
+      {lv:3, book:"入試現代文へのアクセス 発展編", note:"出版社:河合出版。MARCH・上位国公立志望者向けの定番。"},
+      {lv:4, book:"現代文と格闘する", note:"出版社:河合出版。早慶上智志望者向け。現代文参考書の最高峰。"},
+      {lv:5, book:"上級現代文I", note:"出版社:桐原書店。幅広い国公立志望者の上級演習用。"}
+    ],
+    "数学": [
+      {lv:1, book:"白チャート(IA/IIB/III)", note:"出版社:数研出版。数学がよほど苦手な人向け。"},
+      {lv:2, book:"黄チャート(IA/IIB/III)", note:"出版社:数研出版。地方公立・中堅私大レベル志望者のスタート地点。"},
+      {lv:3, book:"青チャート(IA/IIB/III)", note:"出版社:数研出版。MARCH〜難関国立まで幅広い受験生向けの王道網羅系。"},
+      {lv:4, book:"一対一対応の演習", note:"出版社:東京出版。難関大を見据える受験生向け。やり込めば過去問演習に移行可。"},
+      {lv:5, book:"上級問題精講(IA/IIB/III)", note:"出版社:旺文社。東大・京大・東京科学大など最難関志望で数学が得意な人向け。"}
+    ],
+    "物理": [
+      {lv:1, book:"橋元の物理基礎をはじめからていねいに", note:"出版社:東進ブックス。物理基礎を初めて学ぶ人向け。"},
+      {lv:2, book:"物理のエッセンス", note:"出版社:河合出版。物理の基礎を型で固めたい人、共通テスト〜地方国公立志望の1冊目。"},
+      {lv:3, book:"物理 基礎問題精講", note:"出版社:旺文社。MARCH〜難関国公立を目指し、型を問題で固めたい人向け。"},
+      {lv:4, book:"名問の森 物理", note:"出版社:河合出版。難関国公立・早慶・医学部を目指す人向け。"},
+      {lv:5, book:"物理 標準問題精講", note:"出版社:旺文社。東大・京大・医学部など最難関を目指す人向け。"}
+    ],
+    "化学": [
+      {lv:1, book:"鎌田の化学基礎をはじめからていねいに", note:"出版社:東進ブックス。化学基礎を学ぶ人向け。"},
+      {lv:2, book:"岡野の化学をはじめからていねいに(理論化学編)", note:"出版社:東進ブックス。化学を初めから学ぶ人・苦手な人向け。"},
+      {lv:3, book:"化学 基礎問題精講", note:"出版社:旺文社。入試標準問題の解き方を学びたい人向け。"},
+      {lv:4, book:"実戦 化学重要問題集", note:"出版社:数研出版。難関大の入試対策をしたい人向け。"},
+      {lv:5, book:"化学 標準問題精講", note:"出版社:旺文社。東大・京大・医学部を目指す人向け。"}
+    ],
+    "生物": [
+      {lv:1, book:"田部の生物基礎をはじめからていねいに", note:"出版社:東進ブックス。生物基礎を初めて学ぶ人向け。"},
+      {lv:2, book:"宇宙一わかりやすい高校生物", note:"出版社:学研。生物が苦手な人向け。"},
+      {lv:3, book:"生物 基礎問題精講", note:"出版社:旺文社。標準的な入試問題の解き方を学びたい人向け。"},
+      {lv:4, book:"理系標準問題集 生物", note:"出版社:駿台文庫。難関国公立を目指す人向け。"},
+      {lv:5, book:"生物 標準問題精講", note:"出版社:旺文社。東大・京大・医学部を目指す人向け。"}
+    ],
+    "日本史": [
+      {lv:1, book:"金谷の日本史「なぜ」と「流れ」がわかる本", note:"出版社:東進ブックス。日本史の流れを最初につかみたい人向け。"},
+      {lv:2, book:"山川 一問一答 日本史", note:"出版社:山川出版社。用語を効率よく覚えたい人向け。"},
+      {lv:3, book:"時代と流れで覚える!日本史B用語", note:"出版社:文英堂。共通テスト〜私大レベルを目指す人向け。"},
+      {lv:4, book:"日本史標準問題精講", note:"出版社:旺文社。難関大を目指す人向け。"},
+      {lv:5, book:"実力をつける日本史100題", note:"出版社:Z会。国公立二次・難関私大を目指す人向け。"}
+    ],
+    "世界史": [
+      {lv:1, book:"ナビゲーター世界史", note:"出版社:山川出版社。世界史が初めての人、教科書で挫折した人向け。"},
+      {lv:2, book:"山川 一問一答 世界史", note:"出版社:山川出版社。用語を効率よく覚えたい人向け。"},
+      {lv:3, book:"時代と流れで覚える!世界史用語", note:"出版社:文英堂。共通テスト〜私大レベルを目指す人向け。"},
+      {lv:4, book:"世界史標準問題精講", note:"出版社:旺文社。難関大を目指す人向け。"},
+      {lv:5, book:"実力をつける世界史100題", note:"出版社:Z会。国公立二次・難関私大を目指す人向け。"}
+    ],
+    "地理": [
+      {lv:1, book:"村瀬のゼロからわかる地理B", note:"出版社:学研。地理を履修していない人、苦手な人向け。"},
+      {lv:2, book:"山岡の地理B教室", note:"出版社:東進ブックス。文字が詰まった参考書が苦手な人向け。"},
+      {lv:3, book:"地理ノート(共通テスト対応)", note:"出版社:山川出版社。書き込みながら整理したい人向け。"},
+      {lv:4, book:"実力をつける地理100題", note:"出版社:Z会。国公立二次・私大の地理を受ける人向け。"},
+      {lv:5, book:"実力をつける地理100題", note:"出版社:Z会。国公立二次・私大の地理を受ける人向け(難関対応)。"}
+    ],
+    "公共・政治経済・倫理": [
+      {lv:1, book:"蔭山の共通テスト公共", note:"出版社:学研。公共を初めて学ぶ人向け。"},
+      {lv:2, book:"蔭山の共通テスト政治・経済", note:"出版社:学研。政治・経済を選ぶ人向け。"},
+      {lv:3, book:"共通テスト 公共、政治・経済 集中講義", note:"出版社:旺文社。共通テストで公共・政治経済を使う人向け。"},
+      {lv:4, book:"完全MASTER 政経+公共 問題集", note:"出版社:清水書院。共通テスト形式の問題で定着させたい人向け。"},
+      {lv:5, book:"完全MASTER 政経+公共 問題集", note:"出版社:清水書院。共通テスト形式の問題で仕上げたい人向け(発展)。"}
+    ]
+  };
+  // 古文・漢文は歩き方の記載どおり「どれを使っても大差ない/1冊で足りる」のでレベル固定
+  var KOBUN_BOOK = {book:"読んで見て覚える 重要古文単語315", note:"出版社:桐原書店。標準的な単語帳。古文常識も充実。学校配布が多く、基本はこれで十分(マスターBook記載)。"};
+  var KANBUN_BOOK = {book:"漢文ヤマのヤマ", note:"出版社:Gakken。句法と漢字がバランスよく構成された良書。これだけ仕上げて過去問演習に行くのが効率的(マスターBook記載)。"};
+
+  var SUBJECTS = ["英語","国語","数学","理科","社会"];
+
+  var BASE_WEIGHT = {
+    "文系": {"英語":5,"国語":4,"数学":2,"理科":1,"社会":3},
+    "理系": {"英語":4,"国語":2,"数学":5,"理科":4,"社会":1},
+    "未定": {"英語":4,"国語":3,"数学":4,"理科":2,"社会":2}
+  };
+
+  var LEVEL_TO_LV = {"kiso":2, "kyotsu":3, "sojuku":4, "sainan":5, "wakaranai":3};
+  var LEVEL_LABEL = {
+    "kiso":"基礎固め中", "kyotsu":"共通テスト〜MARCH・地方国公立",
+    "sojuku":"早慶・旧帝大", "sainan":"医学部・最難関", "wakaranai":"まだわからない"
+  };
+
+  function pad2(n){ return (n<10?"0":"")+n; }
+  function fmtDate(d){ return (d.getMonth()+1)+"月"+d.getDate()+"日"; }
+  function addDays(d, n){ var r = new Date(d.getTime()); r.setDate(r.getDate()+n); return r; }
+
+  var S = {
+    grade:null, track:null, level:null, examDateStr:null, dateUnknown:false,
+    pinch:null, rikaSub:null, shakaiSub:null
+  };
+
+  var ORDER = ["intro","q1","q2","q3","q4","q5","result"];
+  var history = ["intro"];
+
+  function show(id){
+    var screens = document.querySelectorAll(".screen");
+    for (var i=0;i<screens.length;i++){ screens[i].classList.remove("active"); }
+    document.getElementById("screen-"+id).classList.add("active");
+    var idx = ORDER.indexOf(id);
+    var pct = idx<0 ? 0 : Math.round((idx/(ORDER.length-1))*100);
+    document.getElementById("progressBar").style.width = pct+"%";
+    window.scrollTo(0,0);
+  }
+
+  function renderOptions(containerId, items, onPick){
+    var el = document.getElementById(containerId);
+    el.innerHTML = "";
+    items.forEach(function(item){
+      var btn = document.createElement("button");
+      btn.className = "opt";
+      btn.innerHTML = item.label + (item.sub ? '<span class="sub">'+item.sub+'</span>' : "");
+      btn.onclick = function(){ onPick(item.value); };
+      el.appendChild(btn);
+    });
+  }
+
+  var App = {
+    start: function(){
+      history = ["intro"];
+      renderOptions("opts-grade", [
+        {label:"高1", value:"高1"},
+        {label:"高2", value:"高2"},
+        {label:"高3", value:"高3"},
+        {label:"既卒(浪人)", value:"既卒"}
+      ], function(v){ S.grade=v; history.push("q1"); show("q2"); App.renderQ2(); });
+      history.push("q1"); show("q1");
+    },
+    renderQ2: function(){
+      renderOptions("opts-track", [
+        {label:"文系", value:"文系"},
+        {label:"理系", value:"理系"},
+        {label:"まだ決めていない", value:"未定"}
+      ], function(v){ S.track=v; history.push("q2"); show("q3"); App.renderQ3(); });
+    },
+    renderQ3: function(){
+      renderOptions("opts-level", [
+        {label:"基礎固め中", sub:"高校基礎〜共通テスト基礎レベル", value:"kiso"},
+        {label:"共通テスト〜MARCH・地方国公立", value:"kyotsu"},
+        {label:"早慶・旧帝大", value:"sojuku"},
+        {label:"医学部・最難関", value:"sainan"},
+        {label:"まだわからない", value:"wakaranai"}
+      ], function(v){ S.level=v; history.push("q3"); show("q4"); App.renderQ4(); });
+    },
+    renderQ4: function(){
+      document.getElementById("examDate").value = "";
+      document.getElementById("dateHint").textContent = "";
+      S.examDateStr = null; S.dateUnknown = false;
+    },
+    setUnknownDate: function(){
+      S.dateUnknown = true;
+      document.getElementById("examDate").value = "";
+      document.getElementById("dateHint").textContent = "「まだ決まっていない」で進みます。今日から21日後を仮の目安にするよ。";
+    },
+    confirmDate: function(){
+      var v = document.getElementById("examDate").value;
+      if (!S.dateUnknown){
+        if (!v){
+          document.getElementById("dateHint").textContent = "日付を選ぶか、「まだ決まっていない」を押してね。";
+          return;
+        }
+        S.examDateStr = v;
+      }
+      history.push("q4"); show("q5"); App.renderQ5();
+    },
+    renderQ5: function(){
+      renderOptions("opts-pinch", [
+        {label:"英語", value:"英語"},
+        {label:"国語", value:"国語"},
+        {label:"数学", value:"数学"},
+        {label:"理科", value:"理科"},
+        {label:"社会", value:"社会"},
+        {label:"特にない(全体的にピンチ)", value:"なし"}
+      ], function(v){
+        S.pinch = v;
+        if (v === "理科"){ history.push("q5"); show("q5b"); App.renderQ5b(); return; }
+        if (v === "社会"){ history.push("q5"); show("q5c"); App.renderQ5c(); return; }
+        history.push("q5"); App.finish();
+      });
+    },
+    renderQ5b: function(){
+      renderOptions("opts-rika", [
+        {label:"物理", value:"物理"},
+        {label:"化学", value:"化学"},
+        {label:"生物", value:"生物"},
+        {label:"わからない/おまかせ", value:"物理"}
+      ], function(v){ S.rikaSub=v; history.push("q5b"); App.finish(); });
+    },
+    renderQ5c: function(){
+      renderOptions("opts-shakai", [
+        {label:"日本史", value:"日本史"},
+        {label:"世界史", value:"世界史"},
+        {label:"地理", value:"地理"},
+        {label:"公共・政治経済・倫理", value:"公共・政治経済・倫理"},
+        {label:"わからない/おまかせ", value:"日本史"}
+      ], function(v){ S.shakaiSub=v; history.push("q5c"); App.finish(); });
+    },
+    back: function(){
+      if (history.length <= 1){ show("intro"); return; }
+      history.pop();
+      var prev = history[history.length-1];
+      show(prev);
+    },
+    finish: function(){
+      var r = App.computeResult(S);
+      App.renderResult(r);
+      show("result");
+    },
+
+    computeResult: function(s){
+      var track = s.track || "未定";
+      var weights = {};
+      SUBJECTS.forEach(function(sub){ weights[sub] = BASE_WEIGHT[track][sub]; });
+
+      var pinchTop = s.pinch === "なし" ? null : s.pinch;
+      if (pinchTop){ weights[pinchTop] += (s.level==="kiso" ? 6 : 4); }
+
+      if (s.level === "sainan"){
+        weights["数学"] += 1;
+        weights["理科"] += (track==="理系" ? 2 : 1);
+      }
+
+      var ranked = SUBJECTS.slice().sort(function(a,b){ return weights[b]-weights[a]; });
+      var max = Math.max.apply(null, SUBJECTS.map(function(k){return weights[k];}));
+
+      // 期末までの日数
+      var today = new Date(); today.setHours(0,0,0,0);
+      var examDate;
+      if (s.dateUnknown || !s.examDateStr){
+        examDate = addDays(today, 21);
+      } else {
+        examDate = new Date(s.examDateStr+"T00:00:00");
+      }
+      var daysLeft = Math.round((examDate - today)/86400000);
+      if (daysLeft < 0) daysLeft = 0;
+
+      // 対象科目(理科/社会のサブ科目を解決)
+      var focusSubjectKey = pinchTop || ranked[0];
+      var bookKey = focusSubjectKey;
+      if (focusSubjectKey === "理科") bookKey = s.rikaSub || "物理";
+      if (focusSubjectKey === "社会") bookKey = s.shakaiSub || "日本史";
+
+      var lv = LEVEL_TO_LV[s.level] || 3;
+      var bookInfo;
+      if (bookKey === "国語"){
+        bookInfo = BOOKS["国語"].filter(function(b){return b.lv===lv;})[0];
+      } else {
+        bookInfo = (BOOKS[bookKey] || BOOKS["英語"]).filter(function(b){return b.lv===lv;})[0];
+      }
+
+      // 今夜やる1つ
+      var gradeTone = (s.grade==="高3" || s.grade==="既卒") ? "直結する範囲から" : "今のうちに土台から";
+      var tonight;
+      if (focusSubjectKey === "数学"){
+        tonight = "数学: 今日の授業・前回の模試で✗がついた問題を1つだけ選んで、解説を見ずに最後まで解き直す。" + gradeTone + "始めよう。";
+      } else if (focusSubjectKey === "英語"){
+        tonight = "英語: 「"+bookInfo.book+"」を5分だけ開いて、知らない単語を5個だけ書き出す。長い勉強にしない。";
+      } else if (focusSubjectKey === "国語"){
+        tonight = "国語: 古文単語を5個、通学中や寝る前のスキマで音読する。まとめて覚えようとしない。";
+      } else if (focusSubjectKey === "理科"){
+        tonight = bookKey+": 授業ノートを1ページだけ見返して、公式や反応式を1つだけ「なぜそうなるか」を自分の言葉で言ってみる。";
+      } else if (focusSubjectKey === "社会"){
+        tonight = bookKey+": 今日の授業で出た用語を3つだけ、一問一答形式で自分に問いかけて答える。";
+      } else {
+        tonight = ranked[0]+": 1位の科目のノートか参考書を1冊だけ用意して、今日やった範囲の✗を1つ解き直す。";
+      }
+
+      // 期末までの予定(日付つき)
+      var sched = [];
+      if (daysLeft <= 7){
+        sched.push({date:fmtDate(today), text:"優先順位1位・2位の科目だけに絞って、今日やれる範囲を1つ決める。"});
+        sched.push({date:fmtDate(addDays(today, Math.max(1,Math.floor(daysLeft/2)))), text:"ここまでの✗を全部解き直して、できなかった所だけメモにまとめる。"});
+        sched.push({date:fmtDate(addDays(examDate,-1)), text:"メモだけを見返す。新しい問題には手を出さない。"});
+      } else if (daysLeft <= 14){
+        sched.push({date:fmtDate(today), text:"優先順位1位の科目から、"+bookInfo.book+"などの参考書で範囲を決めて着手する。"});
+        sched.push({date:fmtDate(addDays(today, Math.floor(daysLeft/2))), text:"ここまでの進み具合を確認し、2位の科目に時間を分け始める。"});
+        sched.push({date:fmtDate(addDays(examDate,-3)), text:"科目ごとの✗だけをまとめて解き直す仕上げ期間に入る。"});
+      } else {
+        sched.push({date:fmtDate(addDays(today, (7 - today.getDay() + 7) % 7 || 7)), text:"今週末までに、優先順位1位・2位の科目の範囲を決めて計画を立てる。"});
+        sched.push({date:fmtDate(addDays(today, 14)), text:"1位の科目を一区切り進め、3位以下の科目にも少し手をつけ始める。"});
+        sched.push({date:fmtDate(addDays(examDate,-3)), text:"全科目の✗だけをまとめて解き直す仕上げ期間に入る。"});
+      }
+
+      return {
+        ranked: ranked, weights: weights, max: max,
+        tonight: tonight, sched: sched,
+        bookKey: bookKey, bookInfo: bookInfo, focusSubjectKey: focusSubjectKey,
+        daysLeft: daysLeft, dateUnknown: s.dateUnknown,
+        kobun: KOBUN_BOOK, kanbun: KANBUN_BOOK
+      };
+    },
+
+    renderResult: function(r){
+      var rankList = document.getElementById("rankList");
+      rankList.innerHTML = "";
+      r.ranked.forEach(function(sub, i){
+        var pct = Math.max(12, Math.round((r.weights[sub]/r.max)*100));
+        var row = document.createElement("div");
+        row.className = "rank-row";
+        row.innerHTML =
+          '<div class="rank-num">'+(i+1)+'</div>' +
+          '<div class="rank-body">' +
+            '<div class="rank-name">'+sub+'</div>' +
+            '<div class="rank-bar-bg"><div class="rank-bar" style="width:'+pct+'%"></div></div>' +
+          '</div>';
+        rankList.appendChild(row);
+      });
+
+      document.getElementById("tonightText").textContent = r.tonight;
+
+      var schedList = document.getElementById("schedList");
+      schedList.innerHTML = "";
+      r.sched.forEach(function(item){
+        var row = document.createElement("div");
+        row.className = "sched-item";
+        row.innerHTML = '<div class="sched-date">'+item.date+'</div><div class="sched-text">'+item.text+'</div>';
+        schedList.appendChild(row);
+      });
+      if (r.dateUnknown){
+        var note = document.createElement("div");
+        note.style.fontSize="12.5px"; note.style.color="#5b6270"; note.style.marginTop="8px";
+        note.textContent = "期末テストの日付がまだ決まっていないので、今日から21日後を仮の目安にしています。日付が決まったら、もう一度やり直してね。";
+        schedList.appendChild(note);
+      }
+
+      var bookLabelEl = document.getElementById("bookLabel");
+      var bookKeyShown = r.bookKey;
+      bookLabelEl.textContent = bookKeyShown + "の次の1冊";
+      document.getElementById("bookTitle").textContent = r.bookInfo ? r.bookInfo.book : "-";
+      document.getElementById("bookNote").textContent = r.bookInfo ? r.bookInfo.note : "";
+
+      // 国語の場合は古文・漢文も参考として追記
+      if (r.focusSubjectKey === "国語"){
+        var extra = document.createElement("div");
+        extra.className = "book-card";
+        extra.style.marginTop = "8px";
+        extra.innerHTML =
+          '<div class="book-title">古文単語: '+r.kobun.book+'</div><div class="book-note">'+r.kobun.note+'</div>' +
+          '<div class="book-title" style="margin-top:8px">漢文句法: '+r.kanbun.book+'</div><div class="book-note">'+r.kanbun.note+'</div>';
+        document.getElementById("bookTitle").parentElement.appendChild(extra);
+      }
+    },
+
+    restartAll: function(){ S = {grade:null,track:null,level:null,examDateStr:null,dateUnknown:false,pinch:null,rikaSub:null,shakaiSub:null}; App.start(); },
+
+    saveResult: function(){
+      try{
+        localStorage.setItem("kimatsu_route_v1", JSON.stringify(S));
+        document.getElementById("saveBtn").textContent = "保存したよ!";
+      }catch(e){ /* localStorageが使えない場合は保存をスキップ */ }
+    },
+    restore: function(){
+      var raw = null;
+      try{ raw = localStorage.getItem("kimatsu_route_v1"); }catch(e){ raw = null; }
+      if (!raw) return;
+      try{
+        var saved = JSON.parse(raw);
+        S = saved;
+        history = ["intro"];
+        var r = App.computeResult(S);
+        App.renderResult(r);
+        show("result");
+      }catch(e){ /* 壊れたデータは無視 */ }
+    }
+  };
+
+  window.App = App;
+
+  document.addEventListener("DOMContentLoaded", function(){
+    var raw = null;
+    try{ raw = localStorage.getItem("kimatsu_route_v1"); }catch(e){ raw = null; }
+    if (raw){ document.getElementById("restoreBtn").style.display = "block"; }
+  });
+})();
+</script>
+</body>
+</html>
