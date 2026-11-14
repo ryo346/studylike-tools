@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>部活後10分タイマー</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#141d36;
+    --gray-bg:#f4f5f7;
+    --gray-line:#dfe2e8;
+    --gray-text:#5b6270;
+    --white:#ffffff;
+    --accent:#c0562f;
+  }
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0;
+    background:var(--gray-bg);
+    color:var(--navy-deep);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+    font-size:16px;
+    line-height:1.8;
+    -webkit-text-size-adjust:100%;
+    overflow-x:hidden;
+  }
+  .wrap{ max-width:480px; margin:0 auto; padding:20px 16px 56px; }
+  header.appbar{ text-align:center; padding:14px 0 10px; }
+  header.appbar .brand{ font-size:12px; letter-spacing:.08em; color:var(--gray-text); }
+  header.appbar .title{ font-size:17px; font-weight:700; color:var(--navy); margin-top:4px; line-height:1.5; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  .card{ background:var(--white); border:1px solid var(--gray-line); border-radius:14px; padding:20px 18px; margin-bottom:16px; }
+  h1.q-title{ font-size:17px; font-weight:700; color:var(--navy-deep); margin:0 0 6px; line-height:1.6; }
+  p.q-sub{ font-size:14px; color:var(--gray-text); margin:0 0 18px; }
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  button.opt{
+    width:100%; min-height:52px; text-align:left; padding:13px 16px;
+    font-size:15px; line-height:1.5; color:var(--navy-deep);
+    background:var(--white); border:1.5px solid var(--gray-line); border-radius:10px;
+    cursor:pointer; -webkit-tap-highlight-color: transparent;
+  }
+  button.opt.selected{ background:var(--gray-bg); border-color:var(--navy); font-weight:700; }
+  button.opt .sub{ display:block; font-size:12.5px; color:var(--gray-text); margin-top:3px; font-weight:400; }
+  .nav-row{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; gap:10px; }
+  button.link-btn{ background:none; border:none; color:var(--gray-text); font-size:14px; padding:10px 4px; min-height:44px; cursor:pointer; }
+  button.primary-btn{
+    width:100%; min-height:52px; background:var(--navy); color:var(--white); border:none;
+    border-radius:10px; font-size:16px; font-weight:700; cursor:pointer; -webkit-tap-highlight-color: transparent;
+  }
+  button.primary-btn:disabled{ background:var(--gray-line); color:var(--gray-text); cursor:not-allowed; }
+  button.primary-btn:active:not(:disabled){ background:var(--navy-deep); }
+  button.ghost-btn{
+    width:100%; min-height:48px; background:var(--white); color:var(--navy); border:1.5px solid var(--navy);
+    border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; margin-top:10px;
+  }
+  .intro h1{ font-size:21px; font-weight:800; color:var(--navy-deep); line-height:1.5; margin:18px 0 10px; }
+  .intro p{ font-size:14.5px; color:var(--gray-text); margin:0 0 10px; }
+  .intro .meta{ font-size:12.5px; color:var(--gray-text); margin-top:16px; }
+  .intro .meta span{ display:inline-block; background:var(--gray-bg); border-radius:6px; padding:4px 9px; margin:3px 3px 0 0; }
+  .box-label{ font-size:12px; font-weight:700; color:var(--accent); letter-spacing:.03em; margin-bottom:6px; }
+  .box-text{ font-size:15px; color:var(--navy-deep); line-height:1.78; }
+  .timer-face{ text-align:center; padding:18px 0 8px; }
+  .timer-face .time{ font-size:52px; font-weight:800; color:var(--navy); letter-spacing:.02em; }
+  .timer-face .label{ font-size:13px; color:var(--gray-text); margin-top:4px; }
+  .timer-ctrls{ display:flex; gap:10px; margin-top:16px; }
+  .timer-ctrls button{ flex:1; }
+  .streak-row{ display:flex; gap:10px; margin-bottom:6px; }
+  .streak-box{ flex:1; background:var(--gray-bg); border-radius:10px; padding:14px 10px; text-align:center; }
+  .streak-box .num{ font-size:26px; font-weight:800; color:var(--navy); }
+  .streak-box .cap{ font-size:12px; color:var(--gray-text); margin-top:2px; }
+  .day-row{ display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--gray-line); font-size:14px; }
+  .day-row:last-child{ border-bottom:none; }
+  .day-row .d{ color:var(--navy-deep); }
+  .day-row .s{ font-size:13px; color:var(--gray-text); }
+  .day-row .chk{ font-weight:700; color:var(--navy); }
+  .hist-row{ padding:9px 0; border-bottom:1px solid var(--gray-line); font-size:13.5px; color:var(--navy-deep); }
+  .hist-row:last-child{ border-bottom:none; }
+  .hist-row .d{ color:var(--gray-text); font-size:12.5px; margin-right:6px; }
+  .note-box{ background:var(--gray-bg); border-left:3px solid var(--accent); border-radius:6px; padding:10px 12px; font-size:13.5px; color:var(--navy-deep); margin-bottom:14px; line-height:1.7; }
+  .bridge{ background:var(--navy); color:var(--white); border-radius:14px; padding:18px; margin-top:4px; }
+  .bridge .t{ font-weight:700; font-size:15px; margin-bottom:6px; }
+  .bridge .b{ font-size:13.5px; line-height:1.8; opacity:.92; }
+  .empty-msg{ font-size:13.5px; color:var(--gray-text); padding:6px 0 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="appbar">
+    <div class="brand">STUDYLIKE塾</div>
+    <div class="title">部活後10分タイマー</div>
+  </header>
+
+  <!-- INTRO -->
+  <section class="screen active" id="screen-intro">
+    <div class="card intro">
+      <h1>部活後10分タイマー</h1>
+      <p>「今日は何をやればいいか」を考える時間すらもったいない日用。科目と今日の忙しさを選ぶだけで、やることを1つに絞ってタイマーが始まります。</p>
+      <p>終わったら記録が残るので、続けた日数(ストリーク)が見えるようになります。</p>
+      <div class="meta">
+        <span>英語</span><span>国語</span><span>数学</span><span>理科</span><span>社会</span>
+      </div>
+    </div>
+    <button class="primary-btn" onclick="goTo('settings')">はじめる</button>
+    <button class="ghost-btn" onclick="goTo('history')">記録を見る</button>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="screen-settings">
+    <div class="card">
+      <h1 class="q-title">Q1. 今日やる科目は?(いくつでも選べる)</h1>
+      <p class="q-sub">とりあえず気になる科目を選んでおけばOK。</p>
+      <div class="options" id="opt-subjects"></div>
+    </div>
+    <div class="card">
+      <h1 class="q-title">Q2. 今日、使える時間の感じは?</h1>
+      <p class="q-sub">正確じゃなくて大丈夫。今の感覚で選んで。</p>
+      <div class="options" id="opt-busy"></div>
+    </div>
+    <div class="card">
+      <h1 class="q-title">Q3. タイマーの長さは?</h1>
+      <div class="options" id="opt-timer"></div>
+    </div>
+    <button class="primary-btn" id="btn-to-suggest" onclick="buildSuggestion()" disabled>やることを決める</button>
+    <div class="nav-row"><button class="link-btn" onclick="goTo('intro')">← 戻る</button><span></span></div>
+  </section>
+
+  <!-- SUGGEST -->
+  <section class="screen" id="screen-suggest">
+    <div class="card" id="note-card" style="display:none;"></div>
+    <div class="card">
+      <div class="box-label">今夜やる1つのこと</div>
+      <div class="box-text" id="suggest-main"></div>
+    </div>
+    <button class="primary-btn" onclick="startTimer()">このままタイマーを始める</button>
+    <button class="ghost-btn" onclick="goTo('settings')">科目・時間を選び直す</button>
+  </section>
+
+  <!-- TIMER -->
+  <section class="screen" id="screen-timer">
+    <div class="card">
+      <div class="box-label">今やること</div>
+      <div class="box-text" id="timer-task"></div>
+    </div>
+    <div class="card timer-face">
+      <div class="time" id="timer-display">10:00</div>
+      <div class="label" id="timer-state">タップしてスタート</div>
+      <div class="timer-ctrls">
+        <button class="primary-btn" id="btn-startpause" onclick="toggleTimer()">スタート</button>
+        <button class="ghost-btn" onclick="resetTimer()">リセット</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPLETE -->
+  <section class="screen" id="screen-complete">
+    <div class="card">
+      <div class="box-label">おつかれさま</div>
+      <div class="box-text">今日の分、記録したよ。この積み重ねが1ヶ月後の差になる。</div>
+    </div>
+    <div class="streak-row">
+      <div class="streak-box"><div class="num" id="streak-num">0</div><div class="cap">連続日数</div></div>
+      <div class="streak-box"><div class="num" id="total-num">0</div><div class="cap">これまでの回数</div></div>
+    </div>
+    <div class="card">
+      <h1 class="q-title">期間内の予定(今日から7日間)</h1>
+      <div id="week-list"></div>
+    </div>
+    <div class="bridge">
+      <div class="t">一歩先の提案</div>
+      <div class="b">毎日この10分が確保できない、もしくは「これだけで足りてるのか不安」と感じたら、今の科目バランスと残り時間を一度プロに見せてみて。LINEで学年と志望校を送ってくれたら、個別に見直せるよ。</div>
+    </div>
+    <button class="ghost-btn" onclick="goTo('settings')">もう1回タイマーを設定する</button>
+    <button class="link-btn" onclick="goTo('history')" style="width:100%;text-align:center;">記録を全部見る →</button>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="screen" id="screen-history">
+    <div class="card">
+      <h1 class="q-title">記録(最近14回)</h1>
+      <div id="hist-list"><div class="empty-msg">まだ記録がないよ。タイマーを1回終えると、ここに残ります。</div></div>
+    </div>
+    <button class="primary-btn" onclick="goTo('settings')">タイマーを始める</button>
+    <div class="nav-row"><button class="link-btn" onclick="goTo('intro')">← はじめに戻る</button><span></span></div>
+  </section>
+
+</div>
+
+<script>
+/* ===== データ定義(純粋ロジック。Node側テストと同一内容) ===== */
+var SUBJECTS = [
+  {id:'en', label:'英語'},
+  {id:'koku', label:'国語'},
+  {id:'math', label:'数学'},
+  {id:'rika', label:'理科'},
+  {id:'shakai', label:'社会'}
+];
+var ACTIONS = {
+  en:   {micro:'英単語を10個、声に出して読む', short:'音読を3回(単語帳の例文か教科書を1ページ分)', mid:'長文の解き直しを1題、音読までやる', long:'昨日の間違い直し+音読+単語テストをセットでやる'},
+  koku: {micro:'漢字・語彙を10個確認する', short:'古文単語を15個、声に出して読む', mid:'前に読んだ文章の解説を1つ読み直す', long:'現代文を1題解いて、解説まで読む'},
+  math: {micro:'公式カードを5個、声に出して確認する', short:'例題を1問、解き方だけ声に出して説明してみる', mid:'昨日間違えた問題を1問、解き直す', long:'昨日の間違い直しを3問と、新しい問題を1問やる'},
+  rika: {micro:'用語を10個、声に出して確認する', short:'図やグラフを1つ、自分の言葉で説明してみる', mid:'昨日解いた問題を1問、解き直す', long:'昨日の間違い直しと、新しい問題を2問やる'},
+  shakai:{micro:'一問一答を10問やる', short:'年表やまとめを声に出して読む', mid:'昨日の間違い直し+関連する語を3つ調べる', long:'一問一答を20問と、昨日の間違い直しをやる'}
+};
+var BUSY_OPTIONS = [
+  {id:'many', label:'がっつり使える(30分くらい)'},
+  {id:'bukatsu', label:'部活後で、10分くらい'},
+  {id:'kyui', label:'今日はもう無理そう(5分だけ)'},
+  {id:'wakaranai', label:'正直、まだ分からない'}
+];
+var TIMER_OPTIONS = [5,10,15,25];
+
+function bandOf(min){
+  if(min<=5) return 'micro';
+  if(min<=10) return 'short';
+  if(min<=15) return 'mid';
+  return 'long';
+}
+
+/* subjects: string[] (例: ['en','math']) / busy: string / timerLen: number
+   戻り値は常に文字列を含むオブジェクト(undefined/NaNを作らない) */
+function generateSuggestion(subjects, busy, timerLen){
+  var subs = (subjects && subjects.length) ? subjects.slice() : ['en'];
+  var band = bandOf(timerLen);
+  var maxShow = (busy === 'many') ? 2 : 1;
+  var showSubs = subs.slice(0, maxShow);
+  var lines = [];
+  for(var i=0;i<showSubs.length;i++){
+    var sid = showSubs[i];
+    var label = subjectLabel(sid);
+    var text = (ACTIONS[sid] && ACTIONS[sid][band]) ? ACTIONS[sid][band] : ACTIONS.en.short;
+    lines.push(label + '「' + text + '」');
+  }
+  var restCount = subs.length - showSubs.length;
+  var mainText = lines.join(' / ');
+  if(restCount > 0){
+    mainText += '(残り' + restCount + '科目は次のタイマーで)';
+  }
+  var note = '';
+  if(busy === 'kyui' && timerLen > 10){
+    note = '今日は時間が無さそうだから、タイマーは5分に変えてもいいよ。';
+  } else if(busy === 'many' && timerLen < 15){
+    note = 'せっかく時間があるから、タイマーを15分か25分に伸ばしてもできそう。';
+  } else if(busy === 'wakaranai'){
+    note = 'まずは10分だけやってみて、続けられそうか試してみよう。';
+  }
+  return { band: band, mainText: mainText, note: note, subjectsUsed: showSubs };
+}
+
+function subjectLabel(id){
+  for(var i=0;i<SUBJECTS.length;i++){ if(SUBJECTS[i].id===id) return SUBJECTS[i].label; }
+  return '';
+}
+
+/* ===== ここからUI ===== */
+var state = { subjects: [], busy: null, timerLen: null, suggestion: null };
+var timerSecLeft = 0, timerRunning = false, timerHandle = null;
+
+function goTo(name){
+  var all = document.querySelectorAll('.screen');
+  for(var i=0;i<all.length;i++){ all[i].classList.remove('active'); }
+  document.getElementById('screen-' + name).classList.add('active');
+  if(name === 'history'){ renderHistory(); }
+  window.scrollTo(0,0);
+}
+
+function renderOptions(){
+  var subWrap = document.getElementById('opt-subjects');
+  subWrap.innerHTML = '';
+  SUBJECTS.forEach(function(s){
+    var b = document.createElement('button');
+    b.className = 'opt'; b.type='button'; b.textContent = s.label;
+    b.onclick = function(sid, el){ return function(){
+      var idx = state.subjects.indexOf(sid);
+      if(idx === -1){ state.subjects.push(sid); el.classList.add('selected'); }
+      else { state.subjects.splice(idx,1); el.classList.remove('selected'); }
+      updateNextEnabled();
+    }; }(s.id, b);
+    subWrap.appendChild(b);
+  });
+
+  var busyWrap = document.getElementById('opt-busy');
+  busyWrap.innerHTML = '';
+  BUSY_OPTIONS.forEach(function(opt){
+    var b = document.createElement('button');
+    b.className = 'opt'; b.type='button'; b.textContent = opt.label;
+    b.onclick = function(id, el){ return function(){
+      state.busy = id;
+      var siblings = busyWrap.querySelectorAll('.opt');
+      for(var i=0;i<siblings.length;i++){ siblings[i].classList.remove('selected'); }
+      el.classList.add('selected');
+      updateNextEnabled();
+    }; }(opt.id, b);
+    busyWrap.appendChild(b);
+  });
+
+  var timerWrap = document.getElementById('opt-timer');
+  timerWrap.innerHTML = '';
+  TIMER_OPTIONS.forEach(function(min){
+    var b = document.createElement('button');
+    b.className = 'opt'; b.type='button'; b.textContent = min + '分';
+    b.onclick = function(m, el){ return function(){
+      state.timerLen = m;
+      var siblings = timerWrap.querySelectorAll('.opt');
+      for(var i=0;i<siblings.length;i++){ siblings[i].classList.remove('selected'); }
+      el.classList.add('selected');
+      updateNextEnabled();
+    }; }(min, b);
+    timerWrap.appendChild(b);
+  });
+}
+
+function updateNextEnabled(){
+  var ok = state.subjects.length > 0 && state.busy && state.timerLen;
+  document.getElementById('btn-to-suggest').disabled = !ok;
+}
+
+function buildSuggestion(){
+  var sug = generateSuggestion(state.subjects, state.busy, state.timerLen);
+  state.suggestion = sug;
+  document.getElementById('suggest-main').textContent = sug.mainText;
+  var noteCard = document.getElementById('note-card');
+  if(sug.note){
+    noteCard.style.display = 'block';
+    noteCard.innerHTML = '<div class="note-box">' + escapeHtml(sug.note) + '</div>';
+  } else {
+    noteCard.style.display = 'none';
+  }
+  goTo('suggest');
+}
+
+function startTimer(){
+  document.getElementById('timer-task').textContent = state.suggestion.mainText;
+  timerSecLeft = state.timerLen * 60;
+  timerRunning = false;
+  updateTimerDisplay();
+  document.getElementById('timer-state').textContent = 'タップしてスタート';
+  document.getElementById('btn-startpause').textContent = 'スタート';
+  goTo('timer');
+}
+
+function updateTimerDisplay(){
+  var m = Math.floor(timerSecLeft/60), s = timerSecLeft%60;
+  var disp = (m<10?'0':'')+m + ':' + (s<10?'0':'')+s;
+  document.getElementById('timer-display').textContent = disp;
+}
+
+function toggleTimer(){
+  if(timerRunning){
+    timerRunning = false;
+    clearInterval(timerHandle);
+    document.getElementById('timer-state').textContent = '一時停止中';
+    document.getElementById('btn-startpause').textContent = '再開';
+    return;
+  }
+  timerRunning = true;
+  document.getElementById('timer-state').textContent = '集中中…';
+  document.getElementById('btn-startpause').textContent = '一時停止';
+  timerHandle = setInterval(function(){
+    timerSecLeft--;
+    updateTimerDisplay();
+    if(timerSecLeft<=0){
+      clearInterval(timerHandle);
+      timerRunning = false;
+      onTimerComplete();
+    }
+  }, 1000);
+}
+
+function resetTimer(){
+  clearInterval(timerHandle);
+  timerRunning = false;
+  timerSecLeft = state.timerLen * 60;
+  updateTimerDisplay();
+  document.getElementById('timer-state').textContent = 'タップしてスタート';
+  document.getElementById('btn-startpause').textContent = 'スタート';
+}
+
+function onTimerComplete(){
+  saveLog();
+  renderComplete();
+  goTo('complete');
+}
+
+/* ===== 記録(localStorage)。読み書き失敗時も描画が壊れないようにtry/catch ===== */
+var STORE_KEY = 'bukatsu10_logs_v1';
+function loadLogs(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  }catch(e){ return []; }
+}
+function saveLogs(logs){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(logs)); }catch(e){}
+}
+function todayStr(d){
+  d = d || new Date();
+  var y=d.getFullYear(), m=('0'+(d.getMonth()+1)).slice(-2), day=('0'+d.getDate()).slice(-2);
+  return y+'-'+m+'-'+day;
+}
+function saveLog(){
+  var logs = loadLogs();
+  logs.push({ date: todayStr(), subjects: state.subjects.slice(), timerLen: state.timerLen, busy: state.busy });
+  saveLogs(logs);
+}
+
+function calcStreak(logs){
+  var dates = {};
+  logs.forEach(function(l){ dates[l.date] = true; });
+  var streak = 0, cur = new Date();
+  while(true){
+    var ds = todayStr(cur);
+    if(dates[ds]){ streak++; cur.setDate(cur.getDate()-1); }
+    else { break; }
+  }
+  return streak;
+}
+
+function renderComplete(){
+  var logs = loadLogs();
+  document.getElementById('streak-num').textContent = calcStreak(logs);
+  document.getElementById('total-num').textContent = logs.length;
+  var wrap = document.getElementById('week-list');
+  wrap.innerHTML = '';
+  var doneSet = {};
+  logs.forEach(function(l){ doneSet[l.date] = true; });
+  var wd = ['日','月','火','水','木','金','土'];
+  for(var i=0;i<7;i++){
+    var d = new Date();
+    d.setDate(d.getDate()+i);
+    var ds = todayStr(d);
+    var label = (d.getMonth()+1) + '/' + d.getDate() + '(' + wd[d.getDay()] + ')';
+    var row = document.createElement('div');
+    row.className = 'day-row';
+    var mark = doneSet[ds] ? '<span class="chk">済</span>' : (i===0 ? '<span class="s">今日</span>' : '<span class="s">予定</span>');
+    row.innerHTML = '<span class="d">' + label + '</span>' + mark;
+    wrap.appendChild(row);
+  }
+}
+
+function renderHistory(){
+  var logs = loadLogs().slice().reverse().slice(0,14);
+  var wrap = document.getElementById('hist-list');
+  if(logs.length === 0){
+    wrap.innerHTML = '<div class="empty-msg">まだ記録がないよ。タイマーを1回終えると、ここに残ります。</div>';
+    return;
+  }
+  wrap.innerHTML = '';
+  logs.forEach(function(l){
+    var labels = (l.subjects||[]).map(subjectLabel).join('・');
+    var row = document.createElement('div');
+    row.className = 'hist-row';
+    row.innerHTML = '<span class="d">' + escapeHtml(l.date) + '</span>' + escapeHtml(labels) + '・' + escapeHtml(String(l.timerLen)) + '分';
+    wrap.appendChild(row);
+  });
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+
+renderOptions();
+</script>
+</body>
+</html>
