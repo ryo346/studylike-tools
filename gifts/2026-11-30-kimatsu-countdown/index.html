@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>期末までの逆算カウントダウン</title>
+<style>
+  :root{
+    --navy:#1f2d50;
+    --navy-deep:#182340;
+    --bg:#f4f5f7;
+    --white:#ffffff;
+    --gray:#6b7280;
+    --gray-light:#e3e5e9;
+    --accent:#d97a3f;
+    --accent-deep:#b85f28;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    font-family:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    color:#20242e;
+    font-size:15px;
+    line-height:1.75;
+    -webkit-text-size-adjust:100%;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 48px;
+    min-height:100vh;
+  }
+  header.appbar{
+    text-align:center;
+    padding:6px 0 18px;
+  }
+  header.appbar .tag{
+    display:inline-block;
+    background:var(--navy);
+    color:#fff;
+    font-size:12px;
+    letter-spacing:.05em;
+    padding:4px 10px;
+    border-radius:999px;
+    margin-bottom:10px;
+  }
+  header.appbar h1{
+    font-size:19px;
+    margin:0;
+    color:var(--navy);
+    font-weight:700;
+    line-height:1.5;
+  }
+  .progress{
+    display:flex;
+    gap:6px;
+    margin:16px 0 22px;
+  }
+  .progress .seg{
+    flex:1;
+    height:5px;
+    border-radius:4px;
+    background:var(--gray-light);
+  }
+  .progress .seg.on{background:var(--navy);}
+
+  .card{
+    background:var(--white);
+    border-radius:var(--radius);
+    padding:20px 18px;
+    box-shadow:0 1px 3px rgba(20,25,40,0.06);
+    border:1px solid #eceef1;
+  }
+  .step{display:none;}
+  .step.active{display:block;}
+
+  h2.q{
+    font-size:17px;
+    color:var(--navy);
+    margin:0 0 6px;
+    font-weight:700;
+  }
+  p.sub{
+    color:var(--gray);
+    font-size:13.5px;
+    margin:0 0 18px;
+  }
+
+  .opt-list{display:flex;flex-direction:column;gap:10px;}
+  .opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    padding:14px 16px;
+    min-height:44px;
+    border:1.5px solid var(--gray-light);
+    border-radius:12px;
+    background:var(--white);
+    font-size:15px;
+    color:#20242e;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .opt .main{font-weight:600;}
+  .opt .note{display:block;color:var(--gray);font-size:12.5px;margin-top:3px;}
+  .opt.selected{
+    border-color:var(--navy);
+    background:#eef1f7;
+  }
+  .opt.unknown{color:var(--gray);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+  input[type="date"]{
+    width:100%;
+    min-height:48px;
+    padding:10px 12px;
+    font-size:16px;
+    border:1.5px solid var(--gray-light);
+    border-radius:12px;
+    font-family:inherit;
+    color:#20242e;
+    background:var(--white);
+  }
+
+  .checkday{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:44px;
+    min-height:44px;
+    border:1.5px solid var(--gray-light);
+    border-radius:10px;
+    margin:3px;
+    font-size:14px;
+    cursor:pointer;
+    background:var(--white);
+  }
+  .checkday.selected{
+    background:var(--navy);
+    color:#fff;
+    border-color:var(--navy);
+  }
+  .daywrap{display:flex;flex-wrap:wrap;gap:0;margin-top:4px;}
+
+  .btnrow{
+    display:flex;
+    justify-content:space-between;
+    margin-top:22px;
+    gap:10px;
+  }
+  button.nav{
+    min-height:48px;
+    padding:0 20px;
+    border-radius:12px;
+    font-size:15px;
+    font-weight:600;
+    border:none;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  button.nav.next{
+    background:var(--navy);
+    color:#fff;
+    flex:1;
+  }
+  button.nav.next:disabled{
+    background:#c6cbd6;
+    cursor:not-allowed;
+  }
+  button.nav.back{
+    background:var(--white);
+    color:var(--gray);
+    border:1.5px solid var(--gray-light);
+  }
+  button.nav.full{width:100%;}
+
+  /* 結果画面 */
+  .resulthead{
+    text-align:center;
+    margin-bottom:18px;
+  }
+  .resulthead .days{
+    font-size:40px;
+    font-weight:800;
+    color:var(--navy);
+    line-height:1;
+  }
+  .resulthead .daysunit{font-size:14px;color:var(--gray);margin-top:2px;}
+  .resulthead .bucket{
+    display:inline-block;
+    margin-top:10px;
+    font-size:12.5px;
+    background:#eef1f7;
+    color:var(--navy);
+    padding:4px 10px;
+    border-radius:999px;
+  }
+
+  .sec{margin-top:20px;}
+  .sec h3{
+    font-size:14px;
+    color:var(--navy);
+    margin:0 0 10px;
+    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .sec h3 .num{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:20px;height:20px;
+    border-radius:50%;
+    background:var(--accent);
+    color:#fff;
+    font-size:11px;
+    flex:none;
+  }
+
+  .tonightbox{
+    background:#fff6ef;
+    border:1.5px solid #f0d8c2;
+    border-radius:12px;
+    padding:14px 15px;
+    font-size:14.5px;
+  }
+
+  .timeline{border-left:2px solid var(--gray-light);margin-left:6px;padding-left:16px;}
+  .tl-item{position:relative;padding-bottom:16px;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{
+    content:"";
+    position:absolute;
+    left:-21px;
+    top:3px;
+    width:9px;height:9px;
+    border-radius:50%;
+    background:var(--navy);
+  }
+  .tl-item .ph-name{font-weight:700;font-size:14px;color:#20242e;}
+  .tl-item .ph-date{font-size:12.5px;color:var(--gray);margin-top:2px;}
+
+  .bookcard{
+    border:1.5px solid var(--gray-light);
+    border-radius:12px;
+    padding:14px 15px;
+  }
+  .bookcard .subj{font-size:12px;color:var(--gray);}
+  .bookcard .book{font-size:15.5px;font-weight:700;color:var(--navy);margin-top:3px;}
+  .bookcard .pub{font-size:12.5px;color:var(--gray);margin-top:2px;}
+  .bookcard .note{font-size:13px;margin-top:8px;color:#3a3f4a;}
+
+  .statrow{display:flex;gap:10px;margin-top:8px;}
+  .stat{
+    flex:1;
+    background:var(--bg);
+    border-radius:10px;
+    padding:10px 12px;
+    text-align:center;
+  }
+  .stat .v{font-size:18px;font-weight:800;color:var(--navy);}
+  .stat .l{font-size:11.5px;color:var(--gray);margin-top:2px;}
+
+  .pitchbox{
+    margin-top:22px;
+    background:var(--navy);
+    color:#fff;
+    border-radius:14px;
+    padding:18px 16px;
+    font-size:14px;
+    line-height:1.8;
+  }
+  .pitchbox .pt{font-size:12px;letter-spacing:.04em;opacity:.8;margin-bottom:6px;}
+
+  .savebar{
+    margin-top:18px;
+    display:flex;
+    gap:10px;
+  }
+  .savebar button{
+    flex:1;
+    min-height:46px;
+    border-radius:12px;
+    font-size:13.5px;
+    font-weight:600;
+    border:1.5px solid var(--gray-light);
+    background:#fff;
+    color:var(--navy);
+    font-family:inherit;
+  }
+
+  .restorebar{
+    background:#eef1f7;
+    border-radius:12px;
+    padding:12px 14px;
+    font-size:13px;
+    color:var(--navy);
+    margin-bottom:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+  }
+  .restorebar button{
+    min-height:38px;
+    padding:0 12px;
+    border-radius:10px;
+    border:none;
+    background:var(--navy);
+    color:#fff;
+    font-size:12.5px;
+    font-family:inherit;
+  }
+
+  footer.foot{
+    text-align:center;
+    margin-top:26px;
+    color:#9aa0ab;
+    font-size:11.5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="appbar">
+    <span class="tag">STUDYLIKE塾 ミニアプリ</span>
+    <h1>期末までの<br>逆算カウントダウン</h1>
+  </header>
+
+  <div id="restoreArea"></div>
+
+  <div class="progress" id="progressBar"></div>
+
+  <div class="card">
+
+    <div class="step active" data-step="0">
+      <h2 class="q">期末テストはいつ?</h2>
+      <p class="sub">初日の日付を選んでね。まだ発表されていなければ、だいたいの予想日でOK。</p>
+      <input type="date" id="inTestDate">
+      <div class="btnrow">
+        <span></span>
+        <button class="nav next full" id="btnNext0" disabled>次へ</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="1">
+      <h2 class="q">今回いちばん力を入れたい科目は?</h2>
+      <p class="sub">1つだけ選んでね。まだ決めていなければ、その選択肢でOK。</p>
+      <div class="opt-list" id="subjectOpts"></div>
+      <div class="btnrow">
+        <button class="nav back" id="btnBack1">戻る</button>
+        <button class="nav next" id="btnNext1" disabled>次へ</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="2">
+      <h2 class="q">その科目の今のレベルは?</h2>
+      <p class="sub">一番近いものを選んでね。</p>
+      <div class="opt-list" id="levelOpts"></div>
+      <div class="btnrow">
+        <button class="nav back" id="btnBack2">戻る</button>
+        <button class="nav next" id="btnNext2" disabled>次へ</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="3">
+      <h2 class="q">勉強に使える時間は?</h2>
+      <p class="sub">だいたいの目安でOK。平日と休日、それぞれ選んでね。</p>
+      <p style="font-size:13px;color:var(--gray);margin:14px 0 6px;font-weight:600;">平日1日あたり</p>
+      <div class="opt-list" id="weekdayOpts"></div>
+      <p style="font-size:13px;color:var(--gray);margin:16px 0 6px;font-weight:600;">休日1日あたり</p>
+      <div class="opt-list" id="weekendOpts"></div>
+      <div class="btnrow">
+        <button class="nav back" id="btnBack3">戻る</button>
+        <button class="nav next" id="btnNext3" disabled>次へ</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="4">
+      <h2 class="q">部活や用事で、勉強できない日はある?</h2>
+      <p class="sub">複数選べるよ。無ければ何も選ばなくてOK。</p>
+      <div class="daywrap" id="busyDayWrap"></div>
+      <div class="btnrow">
+        <button class="nav back" id="btnBack4">戻る</button>
+        <button class="nav next full" id="btnNext4">結果を見る</button>
+      </div>
+    </div>
+
+    <div class="step" data-step="5" id="resultStep">
+      <div id="resultBody"></div>
+    </div>
+
+  </div>
+
+  <footer class="foot">STUDYLIKE塾 &mdash; 偏差値50から国公立へ</footer>
+</div>
+
+<script>
+/* ======== core.js (DOM非依存ロジック。Node.jsテストと同一ソース) ======== */
+/* 期末までの逆算カウントダウン - core logic (DOM非依存・Node.jsテスト兼用) */
+(function (root) {
+  "use strict";
+
+  // 参考書マスターBook(英語版/国語版/数学版/理科版/社会版)からの実在データのみを使用。
+  // 科目内に複数ジャンルがある理科・社会は、相談頻度が高い代表ジャンル(理科=物理、社会=日本史)に絞る。
+  // 化学・生物・世界史・地理・公共政経倫理は次回以降のプレゼントで対応予定(概要シートに明記)。
+  var BOOKS = {
+    english: {
+      label: "英語(単語)",
+      genre: "単語",
+      levels: [
+        { book: "英単語ターゲット1200", pub: "旺文社", note: "難易度1・15h・中学~高校基礎" },
+        { book: "英単語ターゲット1400", pub: "旺文社", note: "難易度2・20h・共通テスト基礎" },
+        { book: "英単語ターゲット1900", pub: "旺文社", note: "難易度3・30h・受験生の王道1冊目" },
+        { book: "鉄壁(鉄緑会東大英単語熟語)", pub: "KADOKAWA", note: "難易度4・60h・難関大志望者の2冊目" }
+      ]
+    },
+    japanese: {
+      label: "国語(現代文)",
+      genre: "現代文",
+      levels: [
+        { book: "船口のゼロから読み解く最強の現代文", pub: "Gakken", note: "難易度2・15h・現代文が苦手な人の第一推奨" },
+        { book: "入試現代文へのアクセス 基本編", pub: "河合出版", note: "難易度2・20h・基礎的な設問への取り組み方" },
+        { book: "入試現代文へのアクセス 発展編", pub: "河合出版", note: "難易度4・25h・MARCH・上位国公立志望者の定番" },
+        { book: "入試現代文へのアクセス 完成編", pub: "河合出版", note: "難易度5・30h・早慶上智志望者、過去問への橋渡し" }
+      ]
+    },
+    math: {
+      label: "数学(網羅系)",
+      genre: "網羅系",
+      levels: [
+        { book: "白チャート", pub: "数研出版", note: "難易度1・各100h・数学がよほど苦手な人向け" },
+        { book: "基礎問題精講", pub: "旺文社", note: "難易度2・各60h・短期間で入試基礎を固める" },
+        { book: "青チャート", pub: "数研出版", note: "難易度3~4・各150h・MARCH~難関国立まで幅広い受験生" },
+        { book: "一対一対応の演習", pub: "東京出版", note: "難易度4・各60h・難関大を見据える受験生、過去問へ移行可" }
+      ]
+    },
+    science: {
+      label: "理科(物理)",
+      genre: "物理",
+      levels: [
+        { book: "橋元の物理基礎をはじめからていねいに", pub: "東進ブックス", note: "難易度1・20h・物理基礎を初めて学ぶ人" },
+        { book: "物理のエッセンス", pub: "河合出版", note: "難易度2~3・各30h・共通テスト~地方国公立を目指す人の1冊目" },
+        { book: "良問の風 物理 頻出・標準入試問題集", pub: "河合出版", note: "難易度3・40h・地方国公立~MARCHレベル" },
+        { book: "名問の森 物理", pub: "河合出版", note: "難易度4・各40h・難関国公立・早慶・医学部を目指す人" }
+      ]
+    },
+    social: {
+      label: "社会(日本史)",
+      genre: "日本史",
+      levels: [
+        { book: "金谷の日本史「なぜ」と「流れ」がわかる本", pub: "東進ブックス", note: "難易度1~2・各15h・日本史の流れを最初につかむ" },
+        { book: "山川 一問一答 日本史", pub: "山川出版社", note: "難易度2~3・40h・用語を効率よく覚える" },
+        { book: "大学入試 全レベル問題集 日本史(自分のレベルの冊)", pub: "旺文社", note: "難易度2~4・各20h・段階別に分冊、1冊ずつ段階を上げる" },
+        { book: "日本史標準問題精講", pub: "旺文社", note: "難易度4・60h・難関大入試の典型問題" }
+      ]
+    }
+  };
+
+  var SUBJECT_ORDER = ["english", "japanese", "math", "science", "social"];
+
+  var LEVEL_LABELS = [
+    "ほとんど手つかず・自信がない",
+    "基礎は固まってきた",
+    "共通テスト・標準レベルは解ける",
+    "得意科目・もっと上を目指したい"
+  ];
+
+  var MINUTE_OPTIONS_WEEKDAY = [30, 60, 90, 120];
+  var MINUTE_OPTIONS_WEEKEND = [60, 120, 180, 240];
+  var DEFAULT_WEEKDAY_MIN = 60;
+  var DEFAULT_WEEKEND_MIN = 120;
+  var DEFAULT_LEVEL_IDX = 1; // "わからない"時の既定レベル(基礎は固まってきた)
+
+  var DAY_MS = 24 * 60 * 60 * 1000;
+
+  function clampDate(d) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    return x;
+  }
+
+  function daysBetween(from, to) {
+    return Math.round((clampDate(to).getTime() - clampDate(from).getTime()) / DAY_MS);
+  }
+
+  function addDays(d, n) {
+    var x = new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+    return x;
+  }
+
+  function fmtMD(d) {
+    var w = ["日", "月", "火", "水", "木", "金", "土"][d.getDay()];
+    return (d.getMonth() + 1) + "/" + d.getDate() + "(" + w + ")";
+  }
+
+  // daysBucket: 0=超短期(0-6日) 1=短期(7-13日) 2=中期(14-20日) 3=長期(21日以上)
+  function getDaysBucket(remainingDays) {
+    if (remainingDays <= 6) return 0;
+    if (remainingDays <= 13) return 1;
+    if (remainingDays <= 20) return 2;
+    return 3;
+  }
+
+  var BUCKET_LABEL = ["超短期(1週間以内)", "短期(2週間以内)", "中期(3週間以内)", "長期(3週間より先)"];
+
+  // フェーズ比率 [基礎固め, 演習, 仕上げ] (日数の割合)
+  var PHASE_RATIO = [
+    [0, 0.3, 0.7], // 超短期: 基礎固めはスキップし、要点チェックへ比重
+    [0.15, 0.45, 0.4],
+    [0.3, 0.4, 0.3],
+    [0.4, 0.4, 0.2]
+  ];
+
+  function buildPhases(today, testDate, bucketIdx, remainingDays) {
+    var ratio = PHASE_RATIO[bucketIdx];
+    var names = bucketIdx === 0
+      ? ["総点検(今日やる)", "頻出だけ回す", "前日までの最終チェック"]
+      : ["基礎固め期", "演習期", "仕上げ期"];
+    var lens = ratio.map(function (r) { return Math.max(0, Math.round(remainingDays * r)); });
+    // 合計をremainingDaysに合わせる(四捨五入誤差の調整)
+    var sum = lens[0] + lens[1] + lens[2];
+    lens[2] += (remainingDays - sum);
+    if (lens[2] < 0) { lens[1] += lens[2]; lens[2] = 0; }
+    if (lens[1] < 0) { lens[0] += lens[1]; lens[1] = 0; }
+    if (lens[0] < 0) lens[0] = 0;
+
+    var phases = [];
+    var cursor = addDays(today, 1); // 明日から
+    for (var i = 0; i < 3; i++) {
+      var len = lens[i];
+      if (len <= 0) continue;
+      var start = cursor;
+      var end = addDays(cursor, len - 1);
+      if (end.getTime() > testDate.getTime()) end = addDays(testDate, -1 >= 0 ? -0 : 0);
+      phases.push({
+        name: names[i],
+        startLabel: fmtMD(start),
+        endLabel: fmtMD(end),
+        days: len
+      });
+      cursor = addDays(end, 1);
+    }
+    if (phases.length === 0) {
+      phases.push({ name: names[names.length - 1], startLabel: fmtMD(today), endLabel: fmtMD(testDate), days: remainingDays });
+    }
+    return phases;
+  }
+
+  function resolveLevelIdx(levelInput) {
+    if (levelInput === "unknown" || levelInput === null || levelInput === undefined) return DEFAULT_LEVEL_IDX;
+    var n = Number(levelInput);
+    if (isNaN(n) || n < 0 || n > 3) return DEFAULT_LEVEL_IDX;
+    return n;
+  }
+
+  function resolveMinutes(input, options, fallback) {
+    if (input === "unknown" || input === null || input === undefined) return fallback;
+    var n = Number(input);
+    if (isNaN(n) || options.indexOf(n) === -1) return fallback;
+    return n;
+  }
+
+  function totalAvailableHours(today, testDate, weekdayMin, weekendMin, busyDays) {
+    busyDays = busyDays || [];
+    var cursor = addDays(today, 1);
+    var totalMin = 0;
+    while (cursor.getTime() <= testDate.getTime()) {
+      var dow = cursor.getDay(); // 0=日,6=土
+      if (busyDays.indexOf(dow) === -1) {
+        totalMin += (dow === 0 || dow === 6) ? weekendMin : weekdayMin;
+      }
+      cursor = addDays(cursor, 1);
+    }
+    return Math.round(totalMin / 60 * 10) / 10;
+  }
+
+  function tonightAction(subjectKey, levelIdx, bucketIdx) {
+    if (subjectKey === "unknown") {
+      return "今夜は、5教科(英語・国語・数学・理科・社会)の中で「一番後回しにしてきた」と感じる教科を1つだけ選ぶこと。選べたら、このツールにもう一度その教科で入力してみて。";
+    }
+    var rec = BOOKS[subjectKey].levels[levelIdx];
+    if (bucketIdx === 0) {
+      return "今夜は、「" + rec.book + "」の目次を開いて、「まだ自信がない部分」に丸を3つだけつける。今夜はその3つを15分見るだけでOK。";
+    }
+    return "今夜は、「" + rec.book + "」を15分だけ開いて、今日の分(1〜2項目)だけ進める。まずは「開くこと」を達成するのが目的。";
+  }
+
+  function nextStepPitch() {
+    return "この配分で合ってるか不安になったら、今の学年・志望校・模試の結果を送ってみて。プロが一緒に見直すよ🌻";
+  }
+
+  // 完全な計算結果を返す純粋関数(DOM非依存)
+  function computePlan(input, todayOverride) {
+    var today = todayOverride ? clampDate(todayOverride) : clampDate(new Date());
+    var testDate = clampDate(input.testDate);
+    var remainingDays = daysBetween(today, testDate);
+    if (remainingDays < 0) remainingDays = 0;
+    if (remainingDays > 120) remainingDays = 120;
+
+    var bucketIdx = getDaysBucket(remainingDays);
+    var levelIdx = resolveLevelIdx(input.level);
+    var weekdayMin = resolveMinutes(input.weekdayMinutes, MINUTE_OPTIONS_WEEKDAY, DEFAULT_WEEKDAY_MIN);
+    var weekendMin = resolveMinutes(input.weekendMinutes, MINUTE_OPTIONS_WEEKEND, DEFAULT_WEEKEND_MIN);
+    var busyDays = Array.isArray(input.busyDays) ? input.busyDays.slice() : [];
+
+    var subjectKey = input.subject;
+    var isUnknownSubject = (subjectKey === "unknown" || !BOOKS[subjectKey]);
+
+    var phases = buildPhases(today, testDate, bucketIdx, remainingDays);
+    var totalHours = totalAvailableHours(today, testDate, weekdayMin, weekendMin, busyDays);
+
+    var recommendation = null;
+    if (!isUnknownSubject) {
+      var subj = BOOKS[subjectKey];
+      recommendation = {
+        subjectLabel: subj.label,
+        genre: subj.genre,
+        book: subj.levels[levelIdx].book,
+        pub: subj.levels[levelIdx].pub,
+        note: subj.levels[levelIdx].note
+      };
+    }
+
+    return {
+      remainingDays: remainingDays,
+      bucketIdx: bucketIdx,
+      bucketLabel: BUCKET_LABEL[bucketIdx],
+      levelIdx: levelIdx,
+      levelLabel: LEVEL_LABELS[levelIdx],
+      weekdayMin: weekdayMin,
+      weekendMin: weekendMin,
+      totalHours: totalHours,
+      phases: phases,
+      recommendation: recommendation,
+      tonight: tonightAction(isUnknownSubject ? "unknown" : subjectKey, levelIdx, bucketIdx),
+      pitch: nextStepPitch(),
+      testDateLabel: fmtMD(testDate)
+    };
+  }
+
+  var CoreAPI = {
+    BOOKS: BOOKS,
+    SUBJECT_ORDER: SUBJECT_ORDER,
+    LEVEL_LABELS: LEVEL_LABELS,
+    MINUTE_OPTIONS_WEEKDAY: MINUTE_OPTIONS_WEEKDAY,
+    MINUTE_OPTIONS_WEEKEND: MINUTE_OPTIONS_WEEKEND,
+    computePlan: computePlan,
+    daysBetween: daysBetween,
+    getDaysBucket: getDaysBucket
+  };
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = CoreAPI;
+  } else {
+    root.CountdownCore = CoreAPI;
+  }
+})(typeof window !== "undefined" ? window : this);
+
+/* ======== /core.js ======== */
+
+(function(){
+  "use strict";
+  var Core = window.CountdownCore;
+
+  var state = {
+    testDate: null,
+    subject: null,
+    level: null,
+    weekdayMinutes: null,
+    weekendMinutes: null,
+    busyDays: []
+  };
+
+  var STEP_COUNT = 6; // 0-4 入力 + 5 結果
+  var curStep = 0;
+
+  function renderProgress(){
+    var bar = document.getElementById('progressBar');
+    bar.innerHTML = '';
+    for(var i=0;i<STEP_COUNT-1;i++){
+      var seg = document.createElement('div');
+      seg.className = 'seg' + (i<=curStep?' on':'');
+      bar.appendChild(seg);
+    }
+  }
+
+  function goStep(n){
+    document.querySelectorAll('.step').forEach(function(el){
+      el.classList.toggle('active', Number(el.getAttribute('data-step'))===n);
+    });
+    curStep = n;
+    renderProgress();
+    window.scrollTo(0,0);
+  }
+
+  // --- Step0: 日付 ---
+  var dateInput = document.getElementById('inTestDate');
+  var todayStr = (function(){
+    var d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  })();
+  dateInput.min = todayStr;
+  dateInput.addEventListener('change', function(){
+    document.getElementById('btnNext0').disabled = !dateInput.value;
+  });
+  document.getElementById('btnNext0').addEventListener('click', function(){
+    if(!dateInput.value) return;
+    var parts = dateInput.value.split('-').map(Number);
+    state.testDate = new Date(parts[0], parts[1]-1, parts[2]);
+    goStep(1);
+  });
+
+  // --- Step1: 科目 ---
+  var SUBJECT_UI = [
+    {key:'english', main:'英語'},
+    {key:'japanese', main:'国語'},
+    {key:'math', main:'数学'},
+    {key:'science', main:'理科(物理を中心に)'},
+    {key:'social', main:'社会(日本史を中心に)'},
+    {key:'unknown', main:'まだ決めていない', unknown:true}
+  ];
+  var subjectOptsEl = document.getElementById('subjectOpts');
+  SUBJECT_UI.forEach(function(s){
+    var b = document.createElement('button');
+    b.type='button';
+    b.className='opt'+(s.unknown?' unknown':'');
+    b.innerHTML = '<span class="main">'+s.main+'</span>';
+    b.addEventListener('click', function(){
+      state.subject = s.key;
+      Array.from(subjectOptsEl.children).forEach(function(c){c.classList.remove('selected');});
+      b.classList.add('selected');
+      document.getElementById('btnNext1').disabled = false;
+    });
+    subjectOptsEl.appendChild(b);
+  });
+  document.getElementById('btnBack1').addEventListener('click', function(){goStep(0);});
+  document.getElementById('btnNext1').addEventListener('click', function(){
+    if(state.subject === 'unknown'){
+      state.level = 'unknown';
+      goStep(3);
+    } else {
+      goStep(2);
+    }
+  });
+
+  // --- Step2: レベル ---
+  var levelOptsEl = document.getElementById('levelOpts');
+  function renderLevelOpts(){
+    levelOptsEl.innerHTML = '';
+    Core.LEVEL_LABELS.forEach(function(label, idx){
+      var b = document.createElement('button');
+      b.type='button';
+      b.className='opt';
+      b.innerHTML = '<span class="main">'+label+'</span>';
+      b.addEventListener('click', function(){
+        state.level = String(idx);
+        Array.from(levelOptsEl.children).forEach(function(c){c.classList.remove('selected');});
+        b.classList.add('selected');
+        document.getElementById('btnNext2').disabled = false;
+      });
+      levelOptsEl.appendChild(b);
+    });
+    var u = document.createElement('button');
+    u.type='button';
+    u.className='opt unknown';
+    u.innerHTML = '<span class="main">わからない</span>';
+    u.addEventListener('click', function(){
+      state.level = 'unknown';
+      Array.from(levelOptsEl.children).forEach(function(c){c.classList.remove('selected');});
+      u.classList.add('selected');
+      document.getElementById('btnNext2').disabled = false;
+    });
+    levelOptsEl.appendChild(u);
+  }
+  renderLevelOpts();
+  document.getElementById('btnBack2').addEventListener('click', function(){goStep(1);});
+  document.getElementById('btnNext2').addEventListener('click', function(){goStep(3);});
+
+  // --- Step3: 時間 ---
+  function buildMinuteOpts(containerEl, options, stateKey, nextBtnId){
+    containerEl.innerHTML = '';
+    options.forEach(function(min){
+      var b = document.createElement('button');
+      b.type='button';
+      b.className='opt';
+      b.innerHTML = '<span class="main">'+min+'分</span>';
+      b.addEventListener('click', function(){
+        state[stateKey] = String(min);
+        Array.from(containerEl.children).forEach(function(c){c.classList.remove('selected');});
+        b.classList.add('selected');
+        checkStep3();
+      });
+      containerEl.appendChild(b);
+    });
+    var u = document.createElement('button');
+    u.type='button';
+    u.className='opt unknown';
+    u.innerHTML = '<span class="main">わからない</span>';
+    u.addEventListener('click', function(){
+      state[stateKey] = 'unknown';
+      Array.from(containerEl.children).forEach(function(c){c.classList.remove('selected');});
+      u.classList.add('selected');
+      checkStep3();
+    });
+    containerEl.appendChild(u);
+  }
+  function checkStep3(){
+    document.getElementById('btnNext3').disabled = !(state.weekdayMinutes && state.weekendMinutes);
+  }
+  buildMinuteOpts(document.getElementById('weekdayOpts'), Core.MINUTE_OPTIONS_WEEKDAY, 'weekdayMinutes');
+  buildMinuteOpts(document.getElementById('weekendOpts'), Core.MINUTE_OPTIONS_WEEKEND, 'weekendMinutes');
+  document.getElementById('btnBack3').addEventListener('click', function(){
+    goStep(state.subject === 'unknown' ? 1 : 2);
+  });
+  document.getElementById('btnNext3').addEventListener('click', function(){goStep(4);});
+
+  // --- Step4: 休みの曜日 ---
+  var DOW_LABELS = ['日','月','火','水','木','金','土'];
+  var busyWrap = document.getElementById('busyDayWrap');
+  DOW_LABELS.forEach(function(lab, idx){
+    var b = document.createElement('button');
+    b.type='button';
+    b.className='checkday';
+    b.textContent = lab;
+    b.addEventListener('click', function(){
+      var pos = state.busyDays.indexOf(idx);
+      if(pos===-1){state.busyDays.push(idx); b.classList.add('selected');}
+      else {state.busyDays.splice(pos,1); b.classList.remove('selected');}
+    });
+    busyWrap.appendChild(b);
+  });
+  document.getElementById('btnBack4').addEventListener('click', function(){goStep(3);});
+  document.getElementById('btnNext4').addEventListener('click', function(){
+    var result = Core.computePlan(state);
+    renderResult(result);
+    saveToStorage(state, result);
+    goStep(5);
+  });
+
+  // --- 結果画面 ---
+  function renderResult(r){
+    var html = '';
+    html += '<div class="resulthead">';
+    html += '<div class="days">'+r.remainingDays+'<span style="font-size:16px;">日</span></div>';
+    html += '<div class="daysunit">'+r.testDateLabel+' まで</div>';
+    html += '<div class="bucket">'+r.bucketLabel+'</div>';
+    html += '</div>';
+
+    html += '<div class="sec"><h3><span class="num">1</span>今夜やる1つのこと</h3>';
+    html += '<div class="tonightbox">'+escapeHtml(r.tonight)+'</div></div>';
+
+    if(r.recommendation){
+      html += '<div class="sec"><h3><span class="num">2</span>今の1冊</h3>';
+      html += '<div class="bookcard">';
+      html += '<div class="subj">'+escapeHtml(r.recommendation.subjectLabel)+' / '+escapeHtml(r.recommendation.genre)+'</div>';
+      html += '<div class="book">'+escapeHtml(r.recommendation.book)+'</div>';
+      html += '<div class="pub">'+escapeHtml(r.recommendation.pub)+'</div>';
+      html += '<div class="note">'+escapeHtml(r.recommendation.note)+'</div>';
+      html += '</div></div>';
+    }
+
+    html += '<div class="sec"><h3><span class="num">'+(r.recommendation?3:2)+'</span>期末までの予定</h3>';
+    html += '<div class="timeline">';
+    r.phases.forEach(function(p){
+      html += '<div class="tl-item"><div class="ph-name">'+escapeHtml(p.name)+'</div>';
+      html += '<div class="ph-date">'+escapeHtml(p.startLabel)+' 〜 '+escapeHtml(p.endLabel)+'('+p.days+'日間)</div></div>';
+    });
+    html += '</div>';
+    html += '<div class="statrow">';
+    html += '<div class="stat"><div class="v">'+r.totalHours+'h</div><div class="l">期末までの合計時間</div></div>';
+    html += '<div class="stat"><div class="v">'+r.weekdayMin+'/'+r.weekendMin+'</div><div class="l">平日/休日(分)</div></div>';
+    html += '</div></div>';
+
+    html += '<div class="pitchbox"><div class="pt">一歩先へ</div>'+escapeHtml(r.pitch)+'</div>';
+
+    html += '<div class="savebar">';
+    html += '<button type="button" id="btnRestart">もう一度入力する</button>';
+    html += '<button type="button" id="btnScreenshot">結果カードを表示</button>';
+    html += '</div>';
+
+    document.getElementById('resultBody').innerHTML = html;
+
+    document.getElementById('btnRestart').addEventListener('click', function(){
+      goStep(0);
+    });
+    document.getElementById('btnScreenshot').addEventListener('click', function(){
+      alert('この画面をそのままスクショして、保護者や先生に見せたり、LINEで送ってね📱');
+    });
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  // --- localStorage 保存/復元 ---
+  var STORAGE_KEY = 'sl_countdown_v1';
+  function saveToStorage(st, result){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        state: {
+          testDate: st.testDate ? st.testDate.toISOString() : null,
+          subject: st.subject, level: st.level,
+          weekdayMinutes: st.weekdayMinutes, weekendMinutes: st.weekendMinutes,
+          busyDays: st.busyDays
+        },
+        savedAt: new Date().toISOString(),
+        remainingDaysAtSave: result.remainingDays,
+        subjectLabel: result.recommendation ? result.recommendation.subjectLabel : 'まだ決めていない'
+      }));
+    }catch(e){ /* storage無効時は何もしない */ }
+  }
+  function loadFromStorage(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ return null; }
+  }
+  function tryRestore(){
+    var saved = loadFromStorage();
+    if(!saved) return;
+    var area = document.getElementById('restoreArea');
+    var box = document.createElement('div');
+    box.className = 'restorebar';
+    var d = new Date(saved.savedAt);
+    box.innerHTML = '<span>前回の記録('+(d.getMonth()+1)+'/'+d.getDate()+'・'+escapeHtml(saved.subjectLabel)+')があるよ</span>';
+    var btn = document.createElement('button');
+    btn.textContent = '見る';
+    btn.addEventListener('click', function(){
+      var st = saved.state;
+      state.testDate = st.testDate ? new Date(st.testDate) : null;
+      state.subject = st.subject; state.level = st.level;
+      state.weekdayMinutes = st.weekdayMinutes; state.weekendMinutes = st.weekendMinutes;
+      state.busyDays = st.busyDays || [];
+      if(state.testDate){
+        var result = Core.computePlan(state);
+        renderResult(result);
+        goStep(5);
+      }
+    });
+    box.appendChild(btn);
+    area.appendChild(box);
+  }
+
+  renderProgress();
+  tryRestore();
+})();
+</script>
+</body>
+</html>
